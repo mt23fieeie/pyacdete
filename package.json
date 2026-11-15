@@ -1,0 +1,8 @@
+{
+  "name": "pyacdete-reference",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {"build": "node build-reference.mjs"},
+  "dependencies": {"katex": "^0.16.22", "marked": "^15.0.12"}
+}
