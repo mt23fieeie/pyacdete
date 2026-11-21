@@ -30,18 +30,17 @@
 <h2 id="parameters">Parameters<a class="anchor" href="#parameters" aria-label="Link to Parameters">#</a></h2>
 <dl class="api-fields">
 <dt id="param-mic-samples"><code>mic_samples</code><span class="type">array_like, shape (N,)</span></dt>
-<dd><p>Finite real numeric samples from one microphone channel. The microphone collects the acoustic signal, and the ADC converts it to digital samples. Pass a steady portion of the recording containing at least one complete cycle of the test tone. If the test frequency falls between FFT bins, use at least four cycles.</p></dd>
+<dd><p>Finite real numeric samples from one microphone channel. The microphone collects the acoustic signal, and the ADC converts it to digital samples. Pass samples taken after the loudspeaker response has settled, with the test frequency and level held constant. Use a whole number of test-tone cycles so the test frequency falls on an FFT bin.</p></dd>
 <dt id="param-fs"><code>fs</code><span class="type">float</span></dt>
 <dd><p>Positive finite sampling frequency of the microphone recording in Hz.</p></dd>
 <dt id="param-f0"><code>f0</code><span class="type">float</span></dt>
 <dd><p>Positive finite fundamental frequency of the generated test signal in Hz. For a single tone, this is the frequency of the sine wave.</p></dd>
 <dt id="param-max-order"><code>max_order</code><span class="type">int, optional</span></dt>
-<dd><p>Highest harmonic order in the initial THD estimate. The default is <code>3</code>, so the initial estimate uses the second and third harmonics where the sampling frequency permits. The minimum is <code>2</code>.</p></dd>
+<dd><p>Highest harmonic order in the initial THD estimate. The default is <code>3</code>, so the initial estimate uses the second and third harmonics. The minimum is <code>2</code>.</p></dd>
 </dl>
 
 <h2 id="returns">Returns<a class="anchor" href="#returns" aria-label="Link to Returns">#</a></h2>
 <p><strong>result : dict</strong></p>
-<p>The arrays contain one entry per harmonic order from 1 through <code>max_order_used</code>.</p>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -51,46 +50,17 @@
 </tr>
 </thead>
 <tbody><tr>
-<td><code>harmonic_order</code></td>
-<td>ndarray of int, shape (K,)</td>
-<td>Orders 1 through K, with K equal to <code>max_order_used</code>. Order 1 is the fundamental.</td>
-</tr>
-<tr>
-<td><code>frequency_hz</code></td>
-<td>ndarray of float, shape (K,)</td>
-<td>Target frequencies of the returned orders in Hz.</td>
+<td><code>thd_percent</code></td>
+<td>float</td>
+<td>Reported THD in percent.</td>
 </tr>
 <tr>
 <td><code>amplitude_peak</code></td>
 <td>ndarray of float, shape (K,)</td>
-<td>Estimated peak amplitude of each component on the same scale as <code>mic_samples</code>.</td>
-</tr>
-<tr>
-<td><code>thd_percent</code></td>
-<td>float</td>
-<td>Reported THD in percent, using orders 2 through K.</td>
-</tr>
-<tr>
-<td><code>thd_base_percent</code></td>
-<td>float</td>
-<td>THD through the requested maximum order, limited to frequencies below Nyquist.</td>
-</tr>
-<tr>
-<td><code>thd_extended_percent</code></td>
-<td>float</td>
-<td>THD through three times the requested maximum order, limited to frequencies below Nyquist.</td>
-</tr>
-<tr>
-<td><code>max_order_used</code></td>
-<td>int</td>
-<td>Highest order included in the reported THD.</td>
-</tr>
-<tr>
-<td><code>max_order_checked</code></td>
-<td>int</td>
-<td>Highest order evaluated in the extended estimate.</td>
+<td>Peak amplitudes <code>[A1, A2, ..., AK]</code>, from the fundamental through the highest order used.</td>
 </tr>
 </tbody></table></div>
+<p>The amplitudes use the units of <code>mic_samples</code>. For samples expressed in pascals the peaks are in pascals. For samples normalized to full scale, a peak of <code>0.2</code> is 20% of full scale.</p>
 <h2 id="notes">Notes<a class="anchor" href="#notes" aria-label="Link to Notes">#</a></h2>
 <h3 id="basic-knowledge">Basic Knowledge<a class="anchor" href="#basic-knowledge" aria-label="Link to Basic Knowledge">#</a></h3>
 <p>THD is used to measure the degree of nonlinearity of a system. The reason why the test needs a single tone as input is that a sinusoid contains energy at only one positive frequency (recall the Fourier transform of a sinusoid).</p>
@@ -119,67 +89,55 @@ s-225.272,467,-225.272,467s-235,486,-235,486c-2.7,4.7,-9,7,-19,7
 c-6,0,-10,-1,-12,-3s-194,-422,-194,-422s-65,47,-65,47z
 M834 80h400000v40h-400000z"/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1328em;"><span></span></span></span></span></span></span></span></span>. That common factor cancels in the ratio, so consistently measured RMS and peak amplitudes give the same THD.</p>
 <p>Broadband signals can mask distortion because the input may already contain energy at frequencies where the system generates new components. Both contributions then appear together in the output spectrum. [1]</p>
-<p>A cubic model <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mi>x</mi><mo>+</mo><mn>0.1</mn><msup><mi>x</mi><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">y=x+0.1x^3</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">0.1</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span></span></span></span> illustrates the suitability of a single tone as input. The code compares a single tone with a multitone signal spanning 500 Hz to 8 kHz. It measures the 3 kHz peak amplitude in the input, output and simulated nonlinear contribution <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>−</mo><mi>x</mi></mrow><annotation encoding="application/x-tex">y-x</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">x</span></span></span></span>.</p>
+<p>A cubic model <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mi>x</mi><mo>+</mo><mn>0.1</mn><msup><mi>x</mi><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">y=x+0.1x^3</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">0.1</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span></span></span></span> illustrates this with a broadband input made of tones from 500 Hz to 8 kHz. The code measures the 3 kHz peak amplitude in the input, output and simulated nonlinear contribution <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>−</mo><mi>x</mi></mrow><annotation encoding="application/x-tex">y-x</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">x</span></span></span></span>.</p>
 <div class="code-block"><button class="copy-code" type="button" aria-label="Copy code">Copy</button><pre><code class="language-python">import numpy as np
 
 fs = 48_000
-f0 = 1_000
 t = np.arange(fs) / fs
-tone = 0.6 * np.sin(2 * np.pi * f0 * t)
-broadband = tone + sum(
-    0.03 * np.sin(2 * np.pi * f * t)
-    for f in range(500, 8_001, 500)
-    if f != f0
+x = sum(
+    0.1 * np.cos(2 * np.pi * frequency * t)
+    for frequency in range(500, 8_001, 500)
 )
+y = x + 0.1 * x**3
 
-def peak_at_3khz(samples):
-    # The one-second recording gives a 1 Hz bin spacing.
+# The one-second record gives a 1 Hz bin spacing.
+for label, samples in ((&quot;Input&quot;, x), (&quot;Output&quot;, y), (&quot;Generated component&quot;, y - x)):
     spectrum = np.fft.rfft(samples)
-    return 2 * abs(spectrum[3 * f0]) / len(samples)
-
-for label, x in ((&quot;single tone&quot;, tone), (&quot;broadband&quot;, broadband)):
-    y = x + 0.1 * x**3
-    print(
-        f&quot;{label:11s}  input {peak_at_3khz(x):.5f}  &quot;
-        f&quot;output {peak_at_3khz(y):.5f}  &quot;
-        f&quot;nonlinear contribution {peak_at_3khz(y - x):.5f}&quot;
-    )
+    peak = 2 * abs(spectrum[3_000]) / len(samples)
+    print(f&quot;{label} at 3 kHz = {peak:.6f}&quot;)
 </code></pre></div>
-<div class="code-block"><button class="copy-code" type="button" aria-label="Copy code">Copy</button><pre><code class="language-text">single tone  input 0.00000  output 0.00540  nonlinear contribution 0.00540
-broadband    input 0.03000  output 0.02611  nonlinear contribution 0.00389
+<div class="code-block"><button class="copy-code" type="button" aria-label="Copy code">Copy</button><pre><code class="language-text">Input at 3 kHz = 0.100000
+Output at 3 kHz = 0.117575
+Generated component at 3 kHz = 0.017575
 </code></pre></div>
-<p>In the single-tone case the output at 3 kHz reveals the third harmonic directly. In the broadband case the 3 kHz input component is larger than the generated contribution, and the output amplitude alone cannot isolate the distortion.</p>
+<p>The existing 3 kHz component and the generated component appear in the same output bin. The simulation can inspect <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>−</mo><mi>x</mi></mrow><annotation encoding="application/x-tex">y-x</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">x</span></span></span></span> because the model specifies the linear output <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi></mrow><annotation encoding="application/x-tex">x</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">x</span></span></span></span>.</p>
 <h4>FFT amplitude estimation</h4>
-<p>The function removes the sample mean and estimates each harmonic amplitude from a one-sided FFT. With an integer number of fundamental cycles in the record, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>f</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">f_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> and its harmonics fall on FFT bins, so the function uses a rectangular window and reads those bins directly. Otherwise it applies a Blackman–Harris window to reduce spectral leakage, zero-pads to eight times the record length and interpolates the magnitude spectrum at the target frequencies. The off-bin method needs at least four cycles to keep each harmonic centre outside the main lobe of the adjacent harmonic. A longer recording helps resolve weak components and components close to Nyquist. [3, 5]</p>
-<p>For either window, peak amplitudes are scaled by <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi mathvariant="normal">/</mi><msub><mo>∑</mo><mi>n</mi></msub><mi>w</mi><mo stretchy="false">[</mo><mi>n</mi><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">2/\sum_n w[n]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0497em;vertical-align:-0.2997em;"></span><span class="mord">2/</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop"><span class="mop op-symbol small-op" style="position:relative;top:0em;">∑</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.0017em;"><span style="top:-2.4003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2997em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.0269em;">w</span><span class="mopen">[</span><span class="mord mathnormal">n</span><span class="mclose">]</span></span></span></span>, where <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>w</mi><mo stretchy="false">[</mo><mi>n</mi><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">w[n]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0269em;">w</span><span class="mopen">[</span><span class="mord mathnormal">n</span><span class="mclose">]</span></span></span></span> contains the window weights over the original samples. Only harmonics strictly below the Nyquist frequency <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>f</mi><mi>s</mi></msub><mi mathvariant="normal">/</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">f_s/2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">/2</span></span></span></span> are evaluated. Amplitudes at floating-point precision are set to zero. Broadband noise can still affect amplitude estimates at the frequencies being evaluated. [2, 4]</p>
+<p>The FFT bin spacing is <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>f</mi><mi>s</mi></msub><mi mathvariant="normal">/</mi><mi>N</mi></mrow><annotation encoding="application/x-tex">f_s/N</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">/</span><span class="mord mathnormal" style="margin-right:0.109em;">N</span></span></span></span>, where <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi></mrow><annotation encoding="application/x-tex">N</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">N</span></span></span></span> is the number of samples. With a whole number of fundamental cycles, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>f</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">f_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> and its harmonics fall on FFT bins. The function reads those bins directly and multiplies their magnitudes by <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi mathvariant="normal">/</mi><mi>N</mi></mrow><annotation encoding="application/x-tex">2/N</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">2/</span><span class="mord mathnormal" style="margin-right:0.109em;">N</span></span></span></span> to estimate peak amplitudes. [3, 4]</p>
 <h3 id="beyond-basic-definitions">Beyond Basic Definitions<a class="anchor" href="#beyond-basic-definitions" aria-label="Link to Beyond Basic Definitions">#</a></h3>
 <p>Universal Audio describes how the number of harmonics to include in a THD calculation is related to the degree of nonlinearity. If the nonlinearity is mild, a small number of harmonics can account for most of the distortion. If it is more severe, more harmonics may be needed. [1]</p>
-<p>The function computes THD twice from the same harmonic amplitudes and fundamental. The initial estimate uses up to <code>max_order</code>. The extended estimate checks up to <code>3 * max_order</code>. Each cutoff is limited to the highest order strictly below Nyquist. Adding orders to the same sum of squares can only keep the result the same or increase it. [2, 4]</p>
-<div class="code-block"><button class="copy-code" type="button" aria-label="Copy code">Copy</button><pre><code class="language-text">base_order = min(max_order, highest_order_below_nyquist)
-checked_order = min(3 * max_order, highest_order_below_nyquist)
-THD1 = THD through base_order
-THD2 = THD through checked_order
+<p>The function computes THD twice from the same harmonic amplitudes and fundamental. The initial estimate uses orders up to <code>max_order</code>. The extended estimate uses orders up to <code>3 * max_order</code>. Adding orders to the same sum of squares can only keep the result the same or increase it. [2]</p>
+<div class="code-block"><button class="copy-code" type="button" aria-label="Copy code">Copy</button><pre><code class="language-text">THD1 = THD through max_order
+THD2 = THD through 3 * max_order
 
 small = min(THD1, THD2)
 big = max(THD1, THD2)
 
-if big - small &gt; 0.10 * small:
-    report THD2 and checked_order
+if big &gt; 1.10 * small:
     issue RuntimeWarning
+    return THD2 and its peak amplitudes
 else:
-    report THD1 and base_order
+    return THD1 and its peak amplitudes
 </code></pre></div>
 <p>The comparison uses a <strong>10% relative tolerance</strong> for this API. A rise of 10% means that the added orders account for about 17.4% of the harmonic power in the extended estimate. The rule also handles a zero initial estimate. Two zero estimates retain the initial cutoff, and a positive extended estimate selects the extended cutoff.</p>
 <p>The warning indicates a material contribution from higher-order harmonics, which can indicate stronger nonlinear behavior under the test conditions. The tolerance is an implementation choice for selecting orders. It measures how much the added orders change the result. Device severity also depends on the absolute distortion level and the measurement conditions. [1, 2]</p>
 <h3 id="input-checks-and-reproducibility">Input checks and reproducibility<a class="anchor" href="#input-checks-and-reproducibility" aria-label="Link to Input checks and reproducibility">#</a></h3>
-<p>A <code>ValueError</code> is raised for invalid sample data or parameters, a recording shorter than the required number of cycles, a recording without a usable fundamental, or a test frequency for which the second harmonic is at or above Nyquist. Keep the test frequency, playback level, microphone position, sampling frequency and analyzed sample interval with each measurement.</p>
+<p>A <code>ValueError</code> is raised for invalid sample data or parameters, a recording without a whole number of test-tone cycles or a usable fundamental, or a request for harmonic bins outside the FFT&#39;s usable range. Keep the test frequency, playback level, microphone position, sampling frequency and analyzed sample interval with each measurement.</p>
 <h2 id="references">References<a class="anchor" href="#references" aria-label="Link to References">#</a></h2>
 <ol>
 <li>Universal Audio. <a href="https://www.uaudio.com/blogs/ua/total-harmonic-distortion">Total Harmonic Distortion</a>.</li>
 <li>Audio Precision. <a href="https://www.audioprecision.com/blog/thd-and-thdn-similar-but-not-the-same">THD and THD+N – Similar, but Not the Same</a>.</li>
 <li>National Instruments. <a href="https://www.ni.com/en/shop/data-acquisition/measurement-fundamentals/analog-fundamentals/understanding-ffts-and-windowing.html">Understanding FFTs and Windowing</a>.</li>
-<li>MathWorks Signal Processing Toolbox reference. <a href="https://www.mathworks.com/help/signal/ref/thd.html">thd</a>.</li>
-<li>SciPy reference. <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.windows.blackmanharris.html">Blackman–Harris window</a>.</li>
+<li>MathWorks MATLAB reference. <a href="https://www.mathworks.com/help/matlab/ref/fft.html">fft</a>.</li>
 </ol>
 
 <footer class="page-footer"><p>Python Acoustic Device Testing · pyacdete 0.1.0</p><p>Single-tone loudspeaker total harmonic distortion API reference.</p><p>This website was built with assistance from ChatGPT. Please send feedback to <a href="mailto:1220010941@student.must.edu.mo">1220010941@student.must.edu.mo</a>.</p></footer>
