@@ -46,24 +46,31 @@ The RMS amplitude of each sinusoidal component is $A_k/\sqrt{2}$. That common fa
 
 Broadband signals can mask distortion because the input may already contain energy at frequencies where the system generates new components. Both contributions then appear together in the output spectrum. [1]
 
-A cubic model $y=x+0.1x^3$ illustrates this with a broadband input made of tones from 500 Hz to 8 kHz. The code measures the 3 kHz peak amplitude in the input, output and simulated nonlinear contribution $y-x$.
+A cubic model $y=x+0.1x^3$ illustrates this with a broadband input made of tones from 500 Hz to 8 kHz. The code measures the 3 kHz peak amplitude in the input, output and simulated nonlinear contribution $0.1x^3$.
 
 ```python
 import numpy as np
 
 fs = 48_000
-t = np.arange(fs) / fs
-x = sum(
-    0.1 * np.cos(2 * np.pi * frequency * t)
-    for frequency in range(500, 8_001, 500)
-)
-y = x + 0.1 * x**3
+n = fs  # 1 second
+t = np.arange(n) / fs
 
-# The one-second record gives a 1 Hz bin spacing.
-for label, samples in (("Input", x), ("Output", y), ("Generated component", y - x)):
+input_signal = np.zeros(n)
+for frequency in range(500, 8_001, 500):
+    input_signal += 0.1 * np.cos(2 * np.pi * frequency * t)
+
+generated_signal = 0.1 * input_signal**3
+output_signal = input_signal + generated_signal
+
+def peak_at_3khz(samples):
+    bin_spacing = fs / len(samples)
+    bin_3khz = round(3_000 / bin_spacing)
     spectrum = np.fft.rfft(samples)
-    peak = 2 * abs(spectrum[3_000]) / len(samples)
-    print(f"{label} at 3 kHz = {peak:.6f}")
+    return 2 * abs(spectrum[bin_3khz]) / len(samples)
+
+print(f"Input at 3 kHz = {peak_at_3khz(input_signal):.6f}")
+print(f"Output at 3 kHz = {peak_at_3khz(output_signal):.6f}")
+print(f"Generated component at 3 kHz = {peak_at_3khz(generated_signal):.6f}")
 ```
 
 ```text
@@ -72,7 +79,7 @@ Output at 3 kHz = 0.117575
 Generated component at 3 kHz = 0.017575
 ```
 
-The existing 3 kHz component and the generated component appear in the same output bin. The simulation can inspect $y-x$ because the model specifies the linear output $x$.
+The existing 3 kHz component and the generated component appear in the same output bin. The simulation computes the generated component directly as $0.1x^3$.
 
 #### FFT amplitude estimation
 
@@ -82,7 +89,7 @@ The FFT bin spacing is $f_s/N$, where $N$ is the number of samples. With a whole
 
 Universal Audio describes how the number of harmonics to include in a THD calculation is related to the degree of nonlinearity. If the nonlinearity is mild, a small number of harmonics can account for most of the distortion. If it is more severe, more harmonics may be needed. [1]
 
-The function computes THD twice from the same harmonic amplitudes and fundamental. The initial estimate uses orders up to `max_order`. The extended estimate uses orders up to `3 * max_order`. Adding orders to the same sum of squares can only keep the result the same or increase it. [2]
+The function computes THD twice from the same harmonic amplitudes and fundamental. The initial estimate uses orders up to `max_order`. The extended estimate uses orders up to `3 * max_order`.
 
 ```text
 THD1 = THD through max_order
@@ -98,13 +105,9 @@ else:
     return THD1 and its peak amplitudes
 ```
 
-The comparison uses a **10% relative tolerance** for this API. A rise of 10% means that the added orders account for about 17.4% of the harmonic power in the extended estimate. The rule also handles a zero initial estimate. Two zero estimates retain the initial cutoff, and a positive extended estimate selects the extended cutoff.
+The comparison uses a **10% relative tolerance** for this API. The rule also handles a zero initial estimate. Two zero estimates retain the initial cutoff, and a positive extended estimate selects the extended cutoff.
 
-The warning indicates a material contribution from higher-order harmonics, which can indicate stronger nonlinear behavior under the test conditions. The tolerance is an implementation choice for selecting orders. It measures how much the added orders change the result. Device severity also depends on the absolute distortion level and the measurement conditions. [1, 2]
-
-### Input checks and reproducibility
-
-A `ValueError` is raised for invalid sample data or parameters, a recording without a whole number of test-tone cycles or a usable fundamental, or a request for harmonic bins outside the FFT's usable range. Keep the test frequency, playback level, microphone position, sampling frequency and analyzed sample interval with each measurement.
+The warning indicates a material contribution from higher-order harmonics, which can indicate stronger nonlinear behavior under the test conditions. [1, 2] The tolerance of `0.1` is a tentative, illustrative value with no specific basis.
 
 ## References
 

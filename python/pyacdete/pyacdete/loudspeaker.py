@@ -127,40 +127,18 @@ def single_tone_thd(mic_samples, fs, f0, max_order=3):
     Return thd_percent and amplitude_peak, ordered from the fundamental
     through the highest harmonic used.
     """
-    samples = np.asarray(mic_samples)
-    if (samples.ndim != 1 or samples.size == 0 or samples.dtype.kind not in "iuf"
-            or not np.all(np.isfinite(samples))):
-        raise ValueError("mic_samples must be a nonempty 1D array of finite real samples")
-    for name, value in (("fs", fs), ("f0", f0)):
-        if (not np.isscalar(value) or np.asarray(value).dtype.kind not in "iuf"
-                or not 0 < float(value) < float("inf")):
-            raise ValueError(f"{name} must be a positive finite frequency in Hz")
-    if not isinstance(max_order, (int, np.integer)) or max_order < 2:
-        raise ValueError("max_order must be an integer >= 2")
-
-    sample_count = samples.size
-    bin_position = (float(f0) / float(fs)) * sample_count
-    if not np.isfinite(bin_position):
-        raise ValueError("the test tone must fall on a positive FFT bin")
-    fundamental_bin = round(bin_position)
-    if fundamental_bin < 1 or abs(bin_position - fundamental_bin) > 1e-8:
-        raise ValueError("mic_samples must span a whole number of test-tone cycles")
-
+    samples = np.asarray(mic_samples, dtype=float)
+    sample_count = len(samples)
+    fundamental_bin = round(f0 / fs * sample_count)
     max_order = int(max_order)
     extended_order = 3 * max_order
-    if 2 * extended_order * fundamental_bin >= sample_count:
-        raise ValueError("the FFT does not provide all requested positive harmonic bins")
     harmonic_bins = fundamental_bin * np.arange(1, extended_order + 1)
-    spectrum = np.fft.rfft(samples.astype(float, copy=False))
+    spectrum = np.fft.rfft(samples)
     peak_amplitudes = (2 / sample_count) * np.abs(spectrum[harmonic_bins])
-    if not np.all(np.isfinite(peak_amplitudes)):
-        raise ValueError("harmonic amplitudes overflowed; check sample units")
 
     # Discard floating-point residue before comparing the two estimates.
     roundoff = 8 * np.finfo(float).eps * peak_amplitudes.max()
     peak_amplitudes[peak_amplitudes <= roundoff] = 0.0
-    if peak_amplitudes[0] == 0:
-        raise ValueError("mic_samples has no usable fundamental at f0")
 
     relative_amplitudes = peak_amplitudes[1:] / peak_amplitudes[0]
     thd_base = float(100 * np.linalg.norm(relative_amplitudes[:max_order - 1]))
