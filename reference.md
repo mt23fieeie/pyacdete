@@ -149,7 +149,7 @@ The function does not normalize the two channels independently, resample, align 
 
 The function is illustrated below using real SMARD recordings. Download the package, extract it, and install from the directory containing the extracted `pyacdete` folder:
 
-<div class="download-row"><a class="download" href="downloads/pyacdete-0.1.0.zip" download>Download pyacdete 0.1.0 source</a><a class="download secondary" href="downloads/pyacdete-0.1.0-py3-none-any.whl" download>Download Python wheel</a></div>
+<div class="download-row"><a class="download" href="downloads/pyacdete-0.2.0.zip" download>Download pyacdete 0.2.0 source</a><a class="download secondary" href="downloads/pyacdete-0.2.0-py3-none-any.whl" download>Download Python wheel</a></div>
 
 ```powershell
 python --version

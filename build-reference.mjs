@@ -3,6 +3,8 @@ import path from 'node:path';
 import { marked } from 'marked';
 import katex from 'katex';
 
+const { version } = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+
 const pages = [
   {
     name: 'h1_response', source: 'reference.md', file: 'index.html',
@@ -14,6 +16,12 @@ const pages = [
     name: 'single_tone_thd', source: 'reference-thd.md', file: 'single-tone-thd.html',
     description: 'Python Acoustic Device Testing — single-tone loudspeaker total harmonic distortion API.',
     summary: 'Single-tone loudspeaker total harmonic distortion API reference.',
+    reviewNotice: ''
+  },
+  {
+    name: 'estimate_delay', source: 'reference-delay.md', file: 'delay-estimation.html',
+    description: 'Time-domain cross-correlation delay estimation API with a reproducible SMARD 2000 example.',
+    summary: 'Time-domain delay estimation API reference.',
     reviewNotice: ''
   }
 ];
@@ -31,7 +39,7 @@ function renderMarkdown(source) {
     equations.push({ key, tex, display: false });
     return key;
   });
-  let body = marked.parse(markdown, { gfm: true });
+  let body = marked.parse(markdown, { gfm: true }).replace(/\b(href|src)="docs\//g, '$1="');
   for (const eq of equations) {
     const rendered = katex.renderToString(eq.tex, {
       displayMode: eq.display, throwOnError: true, trust: false,
@@ -76,7 +84,7 @@ function buildPage(page) {
 <a class="skip-link" href="#main">Skip to content</a>
 <header class="topbar"><div class="topbar-inner">
 <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">☰</button>
-<a class="brand" href="${home}">pyacdete<span class="version">0.1.0</span></a>
+<a class="brand" href="${home}">pyacdete<span class="version">${version}</span></a>
 <span class="library-name">Python Acoustic Device Testing</span>
 <div class="search-wrap"><label class="sr-only" for="doc-search">Find in this reference</label><input id="doc-search" type="search" placeholder="Find in this reference…" autocomplete="off"><kbd>/</kbd><div id="search-results" role="list" hidden></div></div>
 <span class="language" aria-label="Documentation language">EN</span>
@@ -85,11 +93,11 @@ function buildPage(page) {
 <aside class="sidebar" aria-label="Main navigation">
 <a class="side-home" href="${home}">API reference</a><p class="sidebar-caption">Python Acoustic Device Testing</p>
 <nav><p class="nav-group">Loudspeaker</p>${navigation}</nav>
-<div class="sidebar-footer"><span>pyacdete 0.1.0</span><span>English documentation</span></div>
+<div class="sidebar-footer"><span>pyacdete ${version}</span><span>English documentation</span></div>
 </aside>
 <main id="main" class="document"><div class="breadcrumbs"><a href="${home}">API reference</a><span>›</span><span>loudspeaker</span></div><div class="page-actions"><a href="downloads/loudspeaker.py" download>View source</a></div>
 ${body}
-<footer class="page-footer"><p>Python Acoustic Device Testing · pyacdete 0.1.0</p><p>${page.summary}</p><p>This website was built with assistance from ChatGPT.${page.reviewNotice} Please send feedback to <a href="mailto:1220010941@student.must.edu.mo">1220010941@student.must.edu.mo</a>.</p></footer>
+<footer class="page-footer"><p>Python Acoustic Device Testing · pyacdete ${version}</p><p>${page.summary}</p><p>This website was built with assistance from ChatGPT.${page.reviewNotice} Please send feedback to <a href="mailto:1220010941@student.must.edu.mo">1220010941@student.must.edu.mo</a>.</p></footer>
 </main>
 <aside class="on-this-page" aria-label="On this page"><p>On this page</p><nav><ul>${toc}</ul></nav><a class="back-top" href="#main">Back to top ↑</a></aside>
 </div>
@@ -104,4 +112,5 @@ fs.mkdirSync('docs/assets/katex', { recursive: true });
 fs.copyFileSync('node_modules/katex/dist/katex.min.css', 'docs/assets/katex/katex.min.css');
 fs.cpSync('node_modules/katex/dist/fonts', 'docs/assets/katex/fonts', { recursive: true });
 fs.copyFileSync('python/pyacdete/pyacdete/loudspeaker.py', 'docs/downloads/loudspeaker.py');
+fs.copyFileSync('python/pyacdete/examples/smard_delay.py', 'docs/downloads/smard_delay.py');
 for (const page of pages) buildPage(page);
