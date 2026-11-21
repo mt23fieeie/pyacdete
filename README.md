@@ -1,10 +1,10 @@
 # pyacdete
 
-Python Acoustic Device Testing — H1 loudspeaker magnitude and phase API.
+Python Acoustic Device Testing — loudspeaker frequency response and harmonic distortion.
 
 ## Documentation
 
-The English API reference is in `docs/index.html`. GitHub Pages should publish from the `main` branch, `/docs` folder.
+The English API reference covers [H1 magnitude and phase](https://mt23fieeie.github.io/pyacdete/) and [single-tone THD](https://mt23fieeie.github.io/pyacdete/single-tone-thd.html). GitHub Pages should publish from the `main` branch, `/docs` folder.
 
 ## Install
 
@@ -13,7 +13,7 @@ python -m pip install "./python/pyacdete[smard]"
 ```
 
 ```python
-from pyacdete.loudspeaker import h1_response
+from pyacdete.loudspeaker import h1_response, single_tone_thd
 ```
 
 See the documentation for SMARD configuration 2000, the exact reference and microphone filenames, and the recorded result.
@@ -25,7 +25,7 @@ npm ci
 npm run build
 ```
 
-The build updates `docs/index.html` and its local KaTeX assets. The remaining static assets and downloads are also stored in `docs`.
+The build updates the HTML reference pages, the downloadable Python source, and the local KaTeX assets in `docs`.
 
 ## Acknowledgment and feedback
 

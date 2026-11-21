@@ -1,4 +1,4 @@
-"""A single-function H1 API: calculate, plot, and save selected responses."""
+"""Loudspeaker frequency response and harmonic distortion measurements."""
 import csv
 from pathlib import Path
 import warnings
@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import signal
 
-__all__ = ["h1_response"]
+__all__ = ["h1_response", "single_tone_thd"]
 
 
 def h1_response(x, y, fs, *, mode="both", threshold=0.9,
@@ -115,3 +115,103 @@ def h1_response(x, y, fs, *, mode="both", threshold=0.9,
     fig.tight_layout()
     plt.show()
     return result
+
+
+def single_tone_thd(mic_samples, fs, f0, max_order=3):
+    """Estimate fundamental-referenced THD from a steady single-tone recording.
+
+    Compare harmonics through max_order and 3 * max_order, limited to
+    frequencies below Nyquist. Use the extended estimate when it exceeds
+    the baseline by more than 10 percent, and emit a RuntimeWarning.
+    The result includes both estimates, the selected and checked orders,
+    and the frequencies and peak amplitudes through the selected order.
+    """
+    for name, value in (("fs", fs), ("f0", f0)):
+        if (not np.isscalar(value) or np.asarray(value).dtype.kind not in "iuf"
+                or not np.isfinite(value) or value <= 0):
+            raise ValueError(f"{name} must be a positive finite frequency in Hz")
+    fs, f0 = float(fs), float(f0)
+    if not np.isfinite(fs) or not np.isfinite(f0) or fs <= 0 or f0 <= 0:
+        raise ValueError("fs and f0 must be representable as positive finite floats")
+    if (isinstance(max_order, (bool, np.bool_))
+            or not isinstance(max_order, (int, np.integer)) or max_order < 2):
+        raise ValueError("max_order must be an integer >= 2")
+    max_order = int(max_order)
+    nyquist = fs / 2
+    if 2 * f0 >= nyquist:
+        raise ValueError("the second harmonic must be below the Nyquist frequency")
+
+    samples = np.asarray(mic_samples)
+    if samples.ndim != 1 or samples.size == 0 or samples.dtype.kind not in "iuf":
+        raise ValueError("mic_samples must be a nonempty 1D array of real numeric samples")
+    with np.errstate(over="ignore", invalid="ignore"):
+        samples = samples.astype(float, copy=False)
+    if not np.all(np.isfinite(samples)):
+        raise ValueError("mic_samples must contain only finite samples")
+    cycles = f0 / fs * samples.size
+    if cycles < 1 and not np.isclose(cycles, 1, rtol=0, atol=1e-8):
+        raise ValueError("mic_samples must span at least one complete fundamental cycle")
+    scale = np.max(np.abs(samples))
+    if scale == 0:
+        raise ValueError("mic_samples has no usable fundamental at f0")
+
+    # A candidate at the boundary can arise from an integer Nyquist/f0 ratio.
+    orders = np.arange(1, min(3 * max_order, int(nyquist / f0)) + 1)
+    orders = orders[orders * f0 < nyquist]
+    checked_order = int(orders[-1])
+    base_order = min(max_order, checked_order)
+    frequencies = orders * f0
+    scaled_samples = samples / scale
+    scaled_samples -= scaled_samples.mean()
+    fundamental_bin = round(cycles)
+    if (np.isclose(cycles, fundamental_bin, rtol=0, atol=1e-8)
+            and checked_order * fundamental_bin < samples.size / 2):
+        spectrum = np.fft.rfft(scaled_samples)
+        amplitudes = (2 / samples.size) * np.abs(spectrum[orders * fundamental_bin])
+    else:
+        # The window's main lobe extends about four original FFT bins
+        # on either side of a tone. Keep adjacent harmonics outside it.
+        if cycles < 4:
+            raise ValueError("off-bin analysis requires at least four fundamental cycles")
+        window = signal.windows.blackmanharris(samples.size, sym=False)
+        fft_size = 8 * samples.size
+        spectrum = np.abs(np.fft.rfft(scaled_samples * window, n=fft_size))
+        amplitudes = (2 / window.sum()) * np.interp(
+            8 * cycles * orders, np.arange(spectrum.size), spectrum
+        )
+
+    # Ignore floating-point residue on bins with no measurable component.
+    numerical_floor = 8 * np.finfo(float).eps * np.log2(samples.size)
+    amplitudes[amplitudes <= numerical_floor] = 0
+    fundamental = amplitudes[0]
+    if fundamental == 0:
+        raise ValueError("mic_samples has no usable fundamental at f0")
+
+    thd_base = float(100 * np.linalg.norm(amplitudes[1:base_order]) / fundamental)
+    thd_extended = float(100 * np.linalg.norm(amplitudes[1:]) / fundamental)
+    small, big = sorted((thd_base, thd_extended))
+    use_extended = big > 1.10 * small
+    used_order = checked_order if use_extended else base_order
+    with np.errstate(over="ignore"):
+        peak_amplitudes = amplitudes[:used_order] * scale
+    if not np.all(np.isfinite(peak_amplitudes)):
+        raise ValueError("harmonic amplitudes overflowed; check sample units")
+    if use_extended:
+        warnings.warn(
+            f"Higher-order harmonics increase THD from {thd_base:.6g}% to "
+            f"{thd_extended:.6g}% and may indicate stronger nonlinear behavior "
+            f"under these measurement conditions. Using orders 2 through {used_order}.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+
+    return dict(
+        harmonic_order=orders[:used_order],
+        frequency_hz=frequencies[:used_order],
+        amplitude_peak=peak_amplitudes,
+        thd_percent=thd_extended if use_extended else thd_base,
+        thd_base_percent=thd_base,
+        thd_extended_percent=thd_extended,
+        max_order_used=used_order,
+        max_order_checked=checked_order,
+    )
