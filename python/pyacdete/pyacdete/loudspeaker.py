@@ -1,4 +1,4 @@
-"""Loudspeaker frequency response and harmonic distortion measurements."""
+"""Loudspeaker frequency response, harmonic distortion and delay measurements."""
 import csv
 from pathlib import Path
 import warnings
@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import signal
 
-__all__ = ["h1_response", "single_tone_thd"]
+__all__ = ["h1_response", "single_tone_thd", "estimate_delay"]
 
 
 def h1_response(x, y, fs, *, mode="both", threshold=0.9,
@@ -176,3 +176,42 @@ def single_tone_thd(mic_samples, fs, f0, max_order=3):
         )
         return dict(thd_percent=thd_extended, amplitude_peak=peak_amplitudes)
     return dict(thd_percent=thd_base, amplitude_peak=peak_amplitudes[:max_order])
+
+
+def estimate_delay(x, y, fs):
+    """Estimate the integer-sample delay of recording ``y`` relative to ``x``.
+
+    Supply finite, nonconstant, real 1D signals on the same sample clock
+    and time origin, with a positive sampling frequency ``fs`` in Hz.
+    Each signal is centered by its own mean. The first maximum of the
+    full, unnormalized time-domain cross-correlation selects the lag.
+
+    Return ``lag_samples``, ``delay_seconds``, ``lags_samples`` and
+    ``correlation`` in a dictionary. A positive lag means ``y`` arrives
+    later than ``x``. The two arrays span all lags in increasing order.
+    """
+    if (not np.isscalar(fs) or np.asarray(fs).dtype.kind not in "iuf"
+            or not 0 < float(fs) < np.inf):
+        raise ValueError("fs must be a positive finite sampling frequency in Hz")
+    reference = _center_delay_signal(x, "x")
+    recorded = _center_delay_signal(y, "y")
+
+    with np.errstate(over="ignore", invalid="ignore"):
+        correlation = signal.correlate(recorded, reference, mode="full", method="direct")
+    if not np.all(np.isfinite(correlation)) or not np.any(correlation):
+        raise ValueError("correlation is undefined at this sample scale")
+    lags = signal.correlation_lags(recorded.size, reference.size, mode="full")
+    lag = int(lags[np.argmax(correlation)])
+    return dict(lag_samples=lag, delay_seconds=lag / float(fs),
+                lags_samples=lags, correlation=correlation)
+
+
+def _center_delay_signal(samples, name):
+    samples = np.asarray(samples)
+    if samples.ndim != 1 or samples.size < 2 or samples.dtype.kind not in "iuf":
+        raise ValueError(f"{name} must be a real 1D signal with at least two samples")
+    with np.errstate(over="ignore", invalid="ignore"):
+        samples = samples.astype(float, copy=False)
+        if not np.all(np.isfinite(samples)) or np.all(samples == samples[0]):
+            raise ValueError(f"{name} must contain finite, nonconstant samples")
+        return samples - samples.mean()

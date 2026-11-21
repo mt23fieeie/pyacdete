@@ -22,3 +22,22 @@ containing `wgn_48kHz_ch8_DirLS.flac` and
 
 The SMARD example estimates the reference-to-microphone measurement path.
 Digital transfer magnitude is not dB SPL or an absolute sensitivity calibration.
+
+## Time-domain delay estimation
+
+```python
+from pyacdete.loudspeaker import estimate_delay
+
+result = estimate_delay(x, y, fs)
+```
+
+`lag_samples` and `delay_seconds` describe the peak of the full direct
+cross-correlation after centering each channel. A positive lag means `y`
+occurs later than `x`. `lags_samples` and `correlation` contain the full curve.
+
+Run the example with the [official SMARD raw archive](https://shares01.portal.aau.dk/smard/data/2000.zip).
+It reads both white-noise recordings from the ZIP and saves the correlation plot.
+
+```shell
+python examples/smard_delay.py /path/to/2000.zip
+```

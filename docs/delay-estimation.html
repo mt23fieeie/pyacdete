@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Time-domain cross-correlation delay estimation API with a reproducible SMARD 2000 example.">
+<meta name="theme-color" content="#f7f9fc">
+<title>pyacdete.loudspeaker.estimate_delay — pyacdete API Reference</title>
+<link rel="stylesheet" href="assets/katex/katex.min.css"><link rel="stylesheet" href="assets/style.css">
+<script src="assets/app.js" defer></script>
+</head><body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="topbar"><div class="topbar-inner">
+<button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">☰</button>
+<a class="brand" href="./">pyacdete<span class="version">0.2.0</span></a>
+<span class="library-name">Python Acoustic Device Testing</span>
+<div class="search-wrap"><label class="sr-only" for="doc-search">Find in this reference</label><input id="doc-search" type="search" placeholder="Find in this reference…" autocomplete="off"><kbd>/</kbd><div id="search-results" role="list" hidden></div></div>
+<span class="language" aria-label="Documentation language">EN</span>
+</div></header>
+<div class="layout">
+<aside class="sidebar" aria-label="Main navigation">
+<a class="side-home" href="./">API reference</a><p class="sidebar-caption">Python Acoustic Device Testing</p>
+<nav><p class="nav-group">Loudspeaker</p><a class="function-link" href="index.html">h1_response</a>
+<a class="function-link" href="single-tone-thd.html">single_tone_thd</a>
+<a class="function-link selected" href="#main" aria-current="page">estimate_delay</a><div class="side-sections"><a href="#signature">Signature</a><a href="#parameters">Parameters</a><a href="#returns">Returns</a><a href="#method-and-interpretation">Method and interpretation</a><a href="#smard-recording-example">SMARD recording example</a><a href="#recorded-result">Recorded result</a><a href="#references">References</a></div></nav>
+<div class="sidebar-footer"><span>pyacdete 0.2.0</span><span>English documentation</span></div>
+</aside>
+<main id="main" class="document"><div class="breadcrumbs"><a href="./">API reference</a><span>›</span><span>loudspeaker</span></div><div class="page-actions"><a href="downloads/loudspeaker.py" download>View source</a></div>
+<h1 id="estimate-delay">estimate_delay<a class="anchor" href="#estimate-delay" aria-label="Link to estimate_delay">#</a></h1>
+<p>Estimate the delay of a recording relative to a reference by finding the peak of their time-domain cross-correlation.</p>
+<h2 id="signature">Signature<a class="anchor" href="#signature" aria-label="Link to Signature">#</a></h2>
+<div class="code-block"><button class="copy-code" type="button" aria-label="Copy code">Copy</button><pre><code class="language-python">from pyacdete.loudspeaker import estimate_delay
+
+result = estimate_delay(x, y, fs)
+</code></pre></div>
+<h2 id="parameters">Parameters<a class="anchor" href="#parameters" aria-label="Link to Parameters">#</a></h2>
+<dl class="api-fields">
+<dt id="param-x"><code>x</code> <span class="type">array-like</span></dt>
+<dd><p>Reference signal, such as the electrical loopback of the loudspeaker drive.</p></dd>
+<dt id="param-y"><code>y</code> <span class="type">array-like</span></dt>
+<dd><p>Recording to compare with <code>x</code>, such as the microphone signal.</p></dd>
+<dt id="param-fs"><code>fs</code> <span class="type">int or float</span></dt>
+<dd><p>Positive finite sampling frequency in Hz, shared by both inputs.</p></dd>
+</dl>
+
+<p>Both signals must be real one-dimensional arrays with at least two finite samples and some variation. They must share a time origin and sample clock. For two audio files, verify that their sample rates match and use the same start frame in each file. Signal lengths may differ. Invalid inputs or a correlation that overflows or vanishes at the supplied sample scale raise <code>ValueError</code>.</p>
+<h2 id="returns">Returns<a class="anchor" href="#returns" aria-label="Link to Returns">#</a></h2>
+<p>The result is a dictionary.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>lag_samples</code></td>
+<td>Signed integer lag at the first maximum of the correlation. Positive means <code>y</code> arrives after <code>x</code>.</td>
+</tr>
+<tr>
+<td><code>delay_seconds</code></td>
+<td><code>lag_samples / fs</code>, in seconds. Multiply by 1,000 for milliseconds.</td>
+</tr>
+<tr>
+<td><code>lags_samples</code></td>
+<td>All integer lags from <code>1 - len(x)</code> through <code>len(y) - 1</code>, inclusive.</td>
+</tr>
+<tr>
+<td><code>correlation</code></td>
+<td>Raw cross-correlation sums at the corresponding lags, with <code>len(x) + len(y) - 1</code> entries.</td>
+</tr>
+</tbody></table></div>
+<h2 id="method-and-interpretation">Method and interpretation<a class="anchor" href="#method-and-interpretation" aria-label="Link to Method and interpretation">#</a></h2>
+<p>Let <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">x_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> and <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">y_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> be the mean-subtracted signals. Samples outside each record contribute zero to the full linear correlation. The function evaluates the sums directly and finds the largest signed value.</p>
+<div class="math-block"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mtable rowspacing="0.25em" columnalign="right left" columnspacing="0em"><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mi>R</mi><mo stretchy="false">[</mo><mi>k</mi><mo stretchy="false">]</mo></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><munder><mo>∑</mo><mi>n</mi></munder><msub><mi>x</mi><mn>0</mn></msub><mo stretchy="false">[</mo><mi>n</mi><mo stretchy="false">]</mo><mtext> </mtext><msub><mi>y</mi><mn>0</mn></msub><mo stretchy="false">[</mo><mi>n</mi><mo>+</mo><mi>k</mi><mo stretchy="false">]</mo><mo separator="true">,</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mover accent="true"><mi>k</mi><mo stretchy="true">^</mo></mover></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><munder><mrow><mi mathvariant="normal">arg max</mi><mo>⁡</mo></mrow><mi>k</mi></munder><mi>R</mi><mo stretchy="false">[</mo><mi>k</mi><mo stretchy="false">]</mo><mo separator="true">,</mo><mspace width="2em"/><mover accent="true"><mi>t</mi><mo stretchy="true">^</mo></mover><mo>=</mo><mover accent="true"><mi>k</mi><mo stretchy="true">^</mo></mover><mi mathvariant="normal">/</mi><msub><mi>f</mi><mi>s</mi></msub><mi mathvariant="normal">.</mi></mrow></mstyle></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{aligned}
+R[k] &amp;= \sum_n x_0[n] \, y_0[n+k], \\
+\widehat{k} &amp;= \operatorname*{arg\,max}_k R[k], \qquad \widehat{t} = \widehat{k}/f_s.
+\end{aligned}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:4.481em;vertical-align:-1.9905em;"></span><span class="mord"><span class="mtable"><span class="col-align-r"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:2.4905em;"><span style="top:-4.4905em;"><span class="pstrut" style="height:3.05em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="mopen">[</span><span class="mord mathnormal" style="margin-right:0.0315em;">k</span><span class="mclose">]</span></span></span><span style="top:-2.0061em;"><span class="pstrut" style="height:3.05em;"></span><span class="mord"><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.9344em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal" style="margin-right:0.0315em;">k</span></span><span class="svg-align" style="top:-3.6944em;"><span class="pstrut" style="height:3em;"></span><span style="height:0.24em;"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="0.24em" viewBox="0 0 1062 239" preserveAspectRatio="none"><path d="M529 0h5l519 115c5 1 9 5 9 10 0 1-1 2-1 3l-4 22
+c-1 5-5 9-11 9h-2L532 67 19 159h-2c-5 0-9-4-11-9l-5-22c-1-6 2-12 8-13z"/></svg></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.9905em;"><span></span></span></span></span></span><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:2.4905em;"><span style="top:-4.4905em;"><span class="pstrut" style="height:3.05em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.05em;"><span style="top:-1.9em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.25em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">[</span><span class="mord mathnormal">n</span><span class="mclose">]</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">[</span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.0315em;">k</span><span class="mclose">]</span><span class="mpunct">,</span></span></span><span style="top:-2.0061em;"><span class="pstrut" style="height:3.05em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.4306em;"><span style="top:-2.1535em;margin-left:0em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0315em;">k</span></span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span><span class="mop"><span class="mord mathrm" style="margin-right:0.0139em;">arg</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathrm">max</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.9465em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="mopen">[</span><span class="mord mathnormal" style="margin-right:0.0315em;">k</span><span class="mclose">]</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8551em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal">t</span></span><span class="svg-align" style="width:calc(100% - 0.1667em);margin-left:0.1667em;top:-3.6151em;"><span class="pstrut" style="height:3em;"></span><span style="height:0.24em;"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="0.24em" viewBox="0 0 1062 239" preserveAspectRatio="none"><path d="M529 0h5l519 115c5 1 9 5 9 10 0 1-1 2-1 3l-4 22
+c-1 5-5 9-11 9h-2L532 67 19 159h-2c-5 0-9-4-11-9l-5-22c-1-6 2-12 8-13z"/></svg></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.9344em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal" style="margin-right:0.0315em;">k</span></span><span class="svg-align" style="top:-3.6944em;"><span class="pstrut" style="height:3em;"></span><span style="height:0.24em;"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="0.24em" viewBox="0 0 1062 239" preserveAspectRatio="none"><path d="M529 0h5l519 115c5 1 9 5 9 10 0 1-1 2-1 3l-4 22
+c-1 5-5 9-11 9h-2L532 67 19 159h-2c-5 0-9-4-11-9l-5-22c-1-6 2-12 8-13z"/></svg></span></span></span></span></span></span><span class="mord">/</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">.</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.9905em;"><span></span></span></span></span></span></span></span></span></span></span></span></div>
+<p>This uses <code>scipy.signal.correlate(y0, x0, mode=&quot;full&quot;, method=&quot;direct&quot;)</code> and the corresponding <code>correlation_lags</code>. The peak estimates delay at one-sample resolution. Direct correlation takes work proportional to <code>len(x) * len(y)</code>, so use an excerpt that is much longer than the expected delay. Broadband excitation helps produce a distinct peak. Noise, narrowband signals and room reflections can make the peak less reliable or move it away from the first arrival.</p>
+<h2 id="smard-recording-example">SMARD recording example<a class="anchor" href="#smard-recording-example" aria-label="Link to SMARD recording example">#</a></h2>
+<p>On the official Aalborg University download page, expand <strong>0000/1000/2000</strong> and choose <strong>Download RAW data</strong> for <strong>Configuration 2000</strong>. The <code>2000.zip</code> archive is about 407 MB. Inside <code>2000_20140121-1125</code>, select the white Gaussian noise recording (segment 7). The two files share the same excitation and recording clock. <a href="https://www.es.aau.dk/research/audio-analysis-lab/smard/download">SMARD downloads</a> · <a href="https://shares01.portal.aau.dk/smard/data/2000.zip">Direct raw archive</a></p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>API input</th>
+<th>File</th>
+<th>Channel</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>x</code></td>
+<td><code>wgn_48kHz_ch8_DirLS.flac</code></td>
+<td>Ch. 8, directional loudspeaker electrical loopback</td>
+</tr>
+<tr>
+<td><code>y</code></td>
+<td><code>wgn_48kHz_ch24_single_mic.flac</code></td>
+<td>Ch. 24, single microphone in the room</td>
+</tr>
+</tbody></table></div>
+<p>Both files are 12-second mono FLAC recordings at 48,000 Hz. The example uses zero-based frames <code>48000:52800</code> from each file, which is the interval <code>[1.000, 1.100)</code> seconds. The script reads just the two selected members from the ZIP.</p>
+<div class="download-row"><a class="download" href="downloads/pyacdete-0.2.0-py3-none-any.whl" download>Download Python wheel</a><a class="download secondary" href="downloads/smard_delay.py" download>Download example script</a><a class="download secondary" href="downloads/pyacdete-0.2.0.zip" download>Download package source</a></div>
+
+<div class="code-block"><button class="copy-code" type="button" aria-label="Copy code">Copy</button><pre><code class="language-shell">python -m pip install &quot;./pyacdete-0.2.0-py3-none-any.whl[smard]&quot;
+python smard_delay.py /path/to/2000.zip
+</code></pre></div>
+<p>For extracted FLAC files, read the same frame range in both channels and pass the arrays to the API.</p>
+<div class="code-block"><button class="copy-code" type="button" aria-label="Copy code">Copy</button><pre><code class="language-python">from pathlib import Path
+
+import soundfile as sf
+from pyacdete.loudspeaker import estimate_delay
+
+folder = Path(&quot;2000_20140121-1125&quot;)
+window = dict(start=48_000, frames=4_800, dtype=&quot;float64&quot;)
+x, fs = sf.read(folder / &quot;wgn_48kHz_ch8_DirLS.flac&quot;, **window)
+y, fs_y = sf.read(folder / &quot;wgn_48kHz_ch24_single_mic.flac&quot;, **window)
+if fs != 48_000 or fs_y != fs or x.shape != (4_800,) or y.shape != (4_800,):
+    raise ValueError(&quot;Expected two 4,800-frame mono windows at 48 kHz&quot;)
+
+result = estimate_delay(x, y, fs)
+print(result[&quot;lag_samples&quot;], 1000 * result[&quot;delay_seconds&quot;])
+</code></pre></div>
+<h2 id="recorded-result">Recorded result<a class="anchor" href="#recorded-result" aria-label="Link to Recorded result">#</a></h2>
+<div class="code-block"><button class="copy-code" type="button" aria-label="Copy code">Copy</button><pre><code class="language-text">Estimated lag: +432 samples
+Estimated delay: +9.000 ms
+Peak correlation: 6.396123
+Saved smard-delay-correlation.png
+</code></pre></div>
+<figure class="result-figure"><a href="assets/smard-delay-correlation.png"><img src="assets/smard-delay-correlation.png" alt="Full SMARD cross-correlation curve and a zoom around the maximum at +9.000 milliseconds or +432 samples." width="1440" height="880" loading="lazy"></a><figcaption>Direct cross-correlation of the loopback and microphone excerpts. The dashed line marks the maximum returned by the API.</figcaption></figure>
+
+<p>The microphone recording follows the loopback by 9.000 ms at the correlation peak. The positions in <code>setup.txt</code> place the speaker about 3.08 m from the microphone. At roughly 343 m/s in 20 °C air, that gives a travel time near 8.98 ms. The measured peak describes the complete loopback-to-microphone path, including acoustic and acquisition effects.</p>
+<h2 id="references">References<a class="anchor" href="#references" aria-label="Link to References">#</a></h2>
+<ol>
+<li>C. H. Knapp and G. C. Carter, “The generalized correlation method for estimation of time delay,” <em>IEEE Transactions on Acoustics, Speech, and Signal Processing</em>, 24(4), 320–327, 1976. The introduction and Eqs. (2)–(3) describe delay estimation from the peak of a cross-correlation function. <a href="https://doi.org/10.1109/TASSP.1976.1162830">DOI 10.1109/TASSP.1976.1162830</a></li>
+<li>SciPy documentation for the discrete sums and lag indices. <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.correlate.html">correlate</a> · <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.correlation_lags.html">correlation_lags</a></li>
+<li>J. K. Nielsen, J. R. Jensen, S. H. Jensen and M. G. Christensen, “The Single- and Multichannel Audio Recordings Database (SMARD),” <em>IWAENC</em>, 2014. <a href="https://www.aaudxp-cms.aau.dk/media/3yhdemt5/smardpaperiwaenc2014.pdf">Dataset paper</a> · <a href="https://www.es.aau.dk/research/audio-analysis-lab/smard">Dataset</a></li>
+<li>OpenStax, <em>University Physics Volume 1</em>, §17.2. <a href="https://openstax.org/books/university-physics-volume-1/pages/17-2-speed-of-sound">Speed of Sound</a></li>
+</ol>
+
+<footer class="page-footer"><p>Python Acoustic Device Testing · pyacdete 0.2.0</p><p>Time-domain delay estimation API reference.</p><p>This website was built with assistance from ChatGPT. Please send feedback to <a href="mailto:1220010941@student.must.edu.mo">1220010941@student.must.edu.mo</a>.</p></footer>
+</main>
+<aside class="on-this-page" aria-label="On this page"><p>On this page</p><nav><ul><li><a href="#signature">Signature</a></li><li><a href="#parameters">Parameters</a></li><li><a href="#returns">Returns</a></li><li><a href="#method-and-interpretation">Method and interpretation</a></li><li><a href="#smard-recording-example">SMARD recording example</a></li><li><a href="#recorded-result">Recorded result</a></li><li><a href="#references">References</a></li></ul></nav><a class="back-top" href="#main">Back to top ↑</a></aside>
+</div>
+<div class="menu-scrim" hidden></div>
+<script type="application/json" id="search-index">[{"level":1,"text":"estimate_delay","id":"estimate-delay"},{"level":2,"text":"Signature","id":"signature"},{"level":2,"text":"Parameters","id":"parameters"},{"level":2,"text":"Returns","id":"returns"},{"level":2,"text":"Method and interpretation","id":"method-and-interpretation"},{"level":2,"text":"SMARD recording example","id":"smard-recording-example"},{"level":2,"text":"Recorded result","id":"recorded-result"},{"level":2,"text":"References","id":"references"},{"level":3,"text":"x","id":"param-x"},{"level":3,"text":"y","id":"param-y"},{"level":3,"text":"fs","id":"param-fs"}]</script>
+</body></html>
