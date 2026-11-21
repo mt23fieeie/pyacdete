@@ -10,7 +10,7 @@ Estimate the total harmonic distortion (THD) of a loudspeaker with a single tone
 
 <dl class="api-fields">
 <dt id="param-mic-samples"><code>mic_samples</code><span class="type">array_like, shape (N,)</span></dt>
-<dd><p>Finite real numeric samples from one microphone channel. The microphone collects the acoustic signal, and the ADC converts it to digital samples. Pass samples taken after the loudspeaker response has settled, with the test frequency and level held constant. Use a whole number of test-tone cycles so the test frequency falls on an FFT bin.</p></dd>
+<dd><p>Finite real numeric samples from one microphone channel. The microphone collects the acoustic signal, and the ADC converts it to digital samples. Use a whole number of test-tone cycles so the test frequency falls on an FFT bin.</p></dd>
 <dt id="param-fs"><code>fs</code><span class="type">float</span></dt>
 <dd><p>Positive finite sampling frequency of the microphone recording in Hz.</p></dd>
 <dt id="param-f0"><code>f0</code><span class="type">float</span></dt>
@@ -28,7 +28,7 @@ Estimate the total harmonic distortion (THD) of a loudspeaker with a single tone
 | `thd_percent` | float | Reported THD in percent. |
 | `amplitude_peak` | ndarray of float, shape (K,) | Peak amplitudes `[A1, A2, ..., AK]`, from the fundamental through the highest order used. |
 
-The amplitudes use the units of `mic_samples`. For samples expressed in pascals the peaks are in pascals. For samples normalized to full scale, a peak of `0.2` is 20% of full scale.
+The amplitudes use the units of `mic_samples`. For samples expressed in pascals the peaks are in pascals.
 
 ## Notes
 
@@ -36,13 +36,13 @@ The amplitudes use the units of `mic_samples`. For samples expressed in pascals 
 
 THD is used to measure the degree of nonlinearity of a system. The reason why the test needs a single tone as input is that a sinusoid contains energy at only one positive frequency (recall the Fourier transform of a sinusoid).
 
-When a sinusoid is applied to a linear time-invariant system, complex exponentials can be used to show that no new frequency components are created in steady state. Nonlinear or time-varying systems can create new frequency components. In a single-tone test, THD measures the output components at integer multiples of the test frequency. [1]
+When a sinusoid is applied to a linear time-invariant system, complex exponentials can be used to show that no new frequency components are created. Nonlinear or time-varying systems can create new frequency components. In a single-tone test, THD measures the output components at integer multiples of the test frequency. [1]
 
 For a highest included order $K$, define $A_k$ as the peak amplitude measured at $kf_0$ in the microphone recording. The function uses THD relative to the measured fundamental. [2]
 
 $$\mathrm{THD}_{K}(\%)=100\,\frac{\sqrt{\sum_{k=2}^{K}A_k^2}}{A_1}.$$
 
-The RMS amplitude of each sinusoidal component is $A_k/\sqrt{2}$. That common factor cancels in the ratio, so consistently measured RMS and peak amplitudes give the same THD.
+The RMS amplitude of each sinusoidal component is $A_k/\sqrt{2}$. That common factor cancels in the ratio, so RMS and peak amplitudes give the same THD.
 
 Broadband signals can mask distortion because the input may already contain energy at frequencies where the system generates new components. Both contributions then appear together in the output spectrum. [1]
 
