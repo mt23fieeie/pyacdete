@@ -19,7 +19,7 @@
 <aside class="sidebar" aria-label="Main navigation">
 <a class="side-home" href="./">API reference</a><p class="sidebar-caption">Python Acoustic Device Testing</p>
 <nav><p class="nav-group">Loudspeaker</p><a class="function-link" href="index.html">h1_response</a>
-<a class="function-link selected" href="#main" aria-current="page">single_tone_thd</a><div class="side-sections"><a href="#parameters">Parameters</a><a href="#returns">Returns</a><a href="#notes">Notes</a><a href="#references">References</a></div></nav>
+<a class="function-link selected" href="#main" aria-current="page">single_tone_thd</a><div class="side-sections"><a href="#parameters">Parameters</a><a href="#returns">Returns</a><a href="#notes">Notes</a><a href="#references">References</a><a href="#examples">Examples</a></div></nav>
 <div class="sidebar-footer"><span>pyacdete 0.1.0</span><span>English documentation</span></div>
 </aside>
 <main id="main" class="document"><div class="breadcrumbs"><a href="./">API reference</a><span>›</span><span>loudspeaker</span></div><div class="page-actions"><a href="downloads/loudspeaker.py" download>View source</a></div>
@@ -143,12 +143,69 @@ else:
 <li>Audio Precision. <a href="https://www.audioprecision.com/blog/thd-and-thdn-similar-but-not-the-same">THD and THD+N – Similar, but Not the Same</a>.</li>
 <li>National Instruments. <a href="https://www.ni.com/en/shop/data-acquisition/measurement-fundamentals/analog-fundamentals/understanding-ffts-and-windowing.html">Understanding FFTs and Windowing</a>.</li>
 <li>MathWorks MATLAB reference. <a href="https://www.mathworks.com/help/matlab/ref/fft.html">fft</a>.</li>
+<li>J. K. Nielsen, J. R. Jensen, S. H. Jensen and M. G. Christensen. <a href="https://shares01.portal.aau.dk/smard/paper/smardPaperIwaenc2014.pdf">The Single- and Multichannel Audio Recordings Database (SMARD)</a>. <em>IWAENC</em>, 2014.</li>
 </ol>
+<h2 id="examples">Examples<a class="anchor" href="#examples" aria-label="Link to Examples">#</a></h2>
+<h3 id="show-the-function-with-a-public-dataset">Show the function with a public dataset<a class="anchor" href="#show-the-function-with-a-public-dataset" aria-label="Link to Show the function with a public dataset">#</a></h3>
+<p>Suppose you have a personal computer running Windows.</p>
+<h4>Step 1. Download and install the required tools and resources</h4>
+<p>Install <a href="https://www.python.org/downloads/windows/">Python 3.14 for Windows</a> and put all three files in one folder, such as <code>Downloads\THD-demo</code>.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="downloads/smard_thd_example.py" download><code>smard_thd_example.py</code></a></td>
+<td>Main program that reads the public data, calls the THD algorithm and displays the result.</td>
+</tr>
+<tr>
+<td><a href="downloads/pyacdete-0.1.0-py3-none-any.whl" download><code>pyacdete-0.1.0-py3-none-any.whl</code></a></td>
+<td>Installation package for the algorithm library.</td>
+</tr>
+<tr>
+<td><code>sinus_tones_48kHz_ch24_single_mic.flac</code></td>
+<td>Public microphone recording. Download <a href="https://shares01.portal.aau.dk/smard/data/2000.zip">SMARD configuration 2000</a> and extract this file from <code>2000_20140121-1125</code>. [5]</td>
+</tr>
+</tbody></table></div>
+<h4>Step 2. Run the example program in PowerShell</h4>
+<div class="code-block"><button class="copy-code" type="button" aria-label="Copy code">Copy</button><pre><code class="language-python">&quot;&quot;&quot;Analyze the 1 kHz step in SMARD configuration 2000 (Nielsen et al., IWAENC 2014).&quot;&quot;&quot;
+
+from pathlib import Path
+
+import soundfile as sf
+from pyacdete.loudspeaker import single_tone_thd
+
+recording = Path(__file__).with_name(&quot;sinus_tones_48kHz_ch24_single_mic.flac&quot;)
+# Samples from 9.200 s up to 9.700 s at 48 kHz.
+mic_samples, fs = sf.read(recording, start=441_600, stop=465_600)
+f0 = 1_000
+result = single_tone_thd(mic_samples, fs, f0, max_order=3)
+
+amplitudes = result[&quot;amplitude_peak&quot;]
+for order, amplitude in enumerate(amplitudes, start=1):
+    print(f&quot;H{order} ({order * f0} Hz): {amplitude:.6g}&quot;)
+print(f&quot;THD (H2-H{len(amplitudes)}): {result[&#39;thd_percent&#39;]:.4f}%&quot;)
+</code></pre></div>
+<p><strong>The main program reads the recording.</strong> It finds <code>sinus_tones_48kHz_ch24_single_mic.flac</code> in the same folder as the script and extracts the <strong>1 kHz</strong> step from <strong>9.200 to 9.700 seconds</strong>. <code>soundfile</code> returns the <strong>24,000 samples</strong> in this segment and the file’s sampling rate of <strong>48,000 Hz</strong>. The main program sets the test frequency <code>f0</code> to <code>1000</code> Hz.</p>
+<p>Run the following commands in PowerShell.</p>
+<div class="code-block"><button class="copy-code" type="button" aria-label="Copy code">Copy</button><pre><code class="language-powershell">Set-Location -LiteralPath &quot;$env:USERPROFILE\Downloads\THD-demo&quot;
+py -3.14 -m pip install --index-url https://pypi.org/simple --timeout 60 &quot;.\pyacdete-0.1.0-py3-none-any.whl[smard]&quot;
+py -3.14 .\smard_thd_example.py
+</code></pre></div>
+<p><strong>Expected result</strong></p>
+<div class="code-block"><button class="copy-code" type="button" aria-label="Copy code">Copy</button><pre><code class="language-text">H1 (1000 Hz): 0.0175559
+H2 (2000 Hz): 5.8375e-06
+H3 (3000 Hz): 1.78385e-05
+THD (H2-H3): 0.1069%
+</code></pre></div>
 
 <footer class="page-footer"><p>Python Acoustic Device Testing · pyacdete 0.1.0</p><p>Single-tone loudspeaker total harmonic distortion API reference.</p><p>This website was built with assistance from ChatGPT. Please send feedback to <a href="mailto:1220010941@student.must.edu.mo">1220010941@student.must.edu.mo</a>.</p></footer>
 </main>
-<aside class="on-this-page" aria-label="On this page"><p>On this page</p><nav><ul><li><a href="#parameters">Parameters</a></li><li><a href="#returns">Returns</a></li><li><a href="#notes">Notes</a></li><li><a href="#references">References</a></li></ul></nav><a class="back-top" href="#main">Back to top ↑</a></aside>
+<aside class="on-this-page" aria-label="On this page"><p>On this page</p><nav><ul><li><a href="#parameters">Parameters</a></li><li><a href="#returns">Returns</a></li><li><a href="#notes">Notes</a></li><li><a href="#references">References</a></li><li><a href="#examples">Examples</a></li></ul></nav><a class="back-top" href="#main">Back to top ↑</a></aside>
 </div>
 <div class="menu-scrim" hidden></div>
-<script type="application/json" id="search-index">[{"level":1,"text":"pyacdete.loudspeaker.single_tone_thd","id":"pyacdete-loudspeaker-single-tone-thd"},{"level":2,"text":"Parameters","id":"parameters"},{"level":2,"text":"Returns","id":"returns"},{"level":2,"text":"Notes","id":"notes"},{"level":3,"text":"Basic Knowledge","id":"basic-knowledge"},{"level":3,"text":"Beyond Basic Definitions","id":"beyond-basic-definitions"},{"level":2,"text":"References","id":"references"},{"level":3,"text":"mic_samples","id":"param-mic-samples"},{"level":3,"text":"fs","id":"param-fs"},{"level":3,"text":"f0","id":"param-f0"},{"level":3,"text":"max_order","id":"param-max-order"}]</script>
+<script type="application/json" id="search-index">[{"level":1,"text":"pyacdete.loudspeaker.single_tone_thd","id":"pyacdete-loudspeaker-single-tone-thd"},{"level":2,"text":"Parameters","id":"parameters"},{"level":2,"text":"Returns","id":"returns"},{"level":2,"text":"Notes","id":"notes"},{"level":3,"text":"Basic Knowledge","id":"basic-knowledge"},{"level":3,"text":"Beyond Basic Definitions","id":"beyond-basic-definitions"},{"level":2,"text":"References","id":"references"},{"level":2,"text":"Examples","id":"examples"},{"level":3,"text":"Show the function with a public dataset","id":"show-the-function-with-a-public-dataset"},{"level":3,"text":"mic_samples","id":"param-mic-samples"},{"level":3,"text":"fs","id":"param-fs"},{"level":3,"text":"f0","id":"param-f0"},{"level":3,"text":"max_order","id":"param-max-order"}]</script>
 </body></html>

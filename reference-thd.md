@@ -115,3 +115,61 @@ The warning indicates a material contribution from higher-order harmonics, which
 2. Audio Precision. [THD and THD+N – Similar, but Not the Same](https://www.audioprecision.com/blog/thd-and-thdn-similar-but-not-the-same).
 3. National Instruments. [Understanding FFTs and Windowing](https://www.ni.com/en/shop/data-acquisition/measurement-fundamentals/analog-fundamentals/understanding-ffts-and-windowing.html).
 4. MathWorks MATLAB reference. [fft](https://www.mathworks.com/help/matlab/ref/fft.html).
+5. J. K. Nielsen, J. R. Jensen, S. H. Jensen and M. G. Christensen. [The Single- and Multichannel Audio Recordings Database (SMARD)](https://shares01.portal.aau.dk/smard/paper/smardPaperIwaenc2014.pdf). *IWAENC*, 2014.
+
+## Examples
+
+### Show the function with a public dataset
+
+Suppose you have a personal computer running Windows.
+
+#### Step 1. Download and install the required tools and resources
+
+Install [Python 3.14 for Windows](https://www.python.org/downloads/windows/) and put all three files in one folder, such as `Downloads\THD-demo`.
+
+| File | Purpose |
+|---|---|
+| <a href="downloads/smard_thd_example.py" download><code>smard_thd_example.py</code></a> | Main program that reads the public data, calls the THD algorithm and displays the result. |
+| <a href="downloads/pyacdete-0.1.0-py3-none-any.whl" download><code>pyacdete-0.1.0-py3-none-any.whl</code></a> | Installation package for the algorithm library. |
+| `sinus_tones_48kHz_ch24_single_mic.flac` | Public microphone recording. Download [SMARD configuration 2000](https://shares01.portal.aau.dk/smard/data/2000.zip) and extract this file from `2000_20140121-1125`. [5] |
+
+#### Step 2. Run the example program in PowerShell
+
+```python
+"""Analyze the 1 kHz step in SMARD configuration 2000 (Nielsen et al., IWAENC 2014)."""
+
+from pathlib import Path
+
+import soundfile as sf
+from pyacdete.loudspeaker import single_tone_thd
+
+recording = Path(__file__).with_name("sinus_tones_48kHz_ch24_single_mic.flac")
+# Samples from 9.200 s up to 9.700 s at 48 kHz.
+mic_samples, fs = sf.read(recording, start=441_600, stop=465_600)
+f0 = 1_000
+result = single_tone_thd(mic_samples, fs, f0, max_order=3)
+
+amplitudes = result["amplitude_peak"]
+for order, amplitude in enumerate(amplitudes, start=1):
+    print(f"H{order} ({order * f0} Hz): {amplitude:.6g}")
+print(f"THD (H2-H{len(amplitudes)}): {result['thd_percent']:.4f}%")
+```
+
+**The main program reads the recording.** It finds `sinus_tones_48kHz_ch24_single_mic.flac` in the same folder as the script and extracts the **1 kHz** step from **9.200 to 9.700 seconds**. `soundfile` returns the **24,000 samples** in this segment and the file’s sampling rate of **48,000 Hz**. The main program sets the test frequency `f0` to `1000` Hz.
+
+Run the following commands in PowerShell.
+
+```powershell
+Set-Location -LiteralPath "$env:USERPROFILE\Downloads\THD-demo"
+py -3.14 -m pip install --index-url https://pypi.org/simple --timeout 60 ".\pyacdete-0.1.0-py3-none-any.whl[smard]"
+py -3.14 .\smard_thd_example.py
+```
+
+**Expected result**
+
+```text
+H1 (1000 Hz): 0.0175559
+H2 (2000 Hz): 5.8375e-06
+H3 (3000 Hz): 1.78385e-05
+THD (H2-H3): 0.1069%
+```
