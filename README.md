@@ -1,10 +1,10 @@
 # pyacdete
 
-Python Acoustic Device Testing — loudspeaker frequency response and harmonic distortion.
+Python Acoustic Device Testing — loudspeaker frequency response, harmonic distortion, and delay.
 
 ## Documentation
 
-The English API reference covers [H1 magnitude and phase](https://mt23fieeie.github.io/pyacdete/) and [single-tone THD](https://mt23fieeie.github.io/pyacdete/single-tone-thd.html). GitHub Pages should publish from the `main` branch, `/docs` folder.
+The English API reference covers [H1 magnitude and phase](https://mt23fieeie.github.io/pyacdete/), [single-tone THD](https://mt23fieeie.github.io/pyacdete/single-tone-thd.html), and [time-domain delay](docs/cross-correlation-delay.html). GitHub Pages should publish from the `main` branch, `/docs` folder.
 
 ## Install
 
@@ -13,7 +13,7 @@ python -m pip install "./python/pyacdete[smard]"
 ```
 
 ```python
-from pyacdete.loudspeaker import h1_response, single_tone_thd
+from pyacdete.loudspeaker import cross_correlation_delay, h1_response, single_tone_thd
 ```
 
 See the documentation for SMARD configuration 2000, the exact reference and microphone filenames, and the recorded result.
