@@ -1,4 +1,4 @@
-"""Loudspeaker frequency response and harmonic distortion measurements."""
+"""Loudspeaker frequency response, harmonic distortion and delay measurements."""
 import csv
 from pathlib import Path
 import warnings
@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import signal
 
-__all__ = ["h1_response", "single_tone_thd"]
+__all__ = ["h1_response", "single_tone_thd", "cross_correlation_delay"]
 
 
 def h1_response(x, y, fs, *, mode="both", threshold=0.9,
@@ -154,3 +154,25 @@ def single_tone_thd(mic_samples, fs, f0, max_order=3):
         )
         return dict(thd_percent=thd_extended, amplitude_peak=peak_amplitudes)
     return dict(thd_percent=thd_base, amplitude_peak=peak_amplitudes[:max_order])
+
+
+def cross_correlation_delay(x, y, fs, *, return_correlation=False):
+    """Estimate the delay of a microphone recording relative to a loopback.
+
+    Supply synchronized, equal-length mono signals and a common positive fs
+    in Hz. A positive delay means y arrives after x. With return_correlation,
+    also return the full lag axis in samples and the cross-correlation.
+    """
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
+    x = x - x.mean()
+    y = y - y.mean()
+
+    correlation = signal.correlate(y, x, mode="full", method="auto")
+    lags_samples = signal.correlation_lags(len(y), len(x), mode="full")
+    delay_samples = int(lags_samples[np.argmax(correlation)])
+
+    result = dict(delay_samples=delay_samples, delay_seconds=delay_samples / float(fs))
+    if return_correlation:
+        result.update(lags_samples=lags_samples, correlation=correlation)
+    return result
