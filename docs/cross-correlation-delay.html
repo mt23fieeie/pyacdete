@@ -27,7 +27,7 @@
 <h1 id="pyacdete-loudspeaker-cross-correlation-delay">pyacdete.loudspeaker.cross_correlation_delay<a class="anchor" href="#pyacdete-loudspeaker-cross-correlation-delay" aria-label="Link to pyacdete.loudspeaker.cross_correlation_delay">#</a></h1>
 <div class="code-block"><button class="copy-code" type="button" aria-label="Copy code">Copy</button><pre><code class="language-python">cross_correlation_delay(x, y, fs, *, return_correlation=False)
 </code></pre></div>
-<p>Estimate the <strong>loopback-to-microphone delay</strong> using time-domain cross-correlation. In a loudspeaker measurement, this delay includes sound propagation through air and can reflect delays introduced by the loudspeaker, the microphone, and the relative timing of the acquisition channels.</p>
+<p>Estimate the <strong>loopback-to-microphone delay</strong> using time-domain cross-correlation. In a loudspeaker measurement, this delay includes sound propagation through air and can reflect delays introduced by the loudspeaker and the microphone.</p>
 <ul>
 <li>Smaart’s Delay Finder “calculates the difference in time between your measurement signal and your reference signal” and lists “Propagation time from speaker to microphone” as a contributor. [1]</li>
 <li>Room EQ Wizard states that “measurements will be relative to the loopback timing” and identifies “the time it takes sound to travel from the speaker being measured to the microphone” as part of the measured delay. [2]</li>

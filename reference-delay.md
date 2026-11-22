@@ -4,7 +4,7 @@
 cross_correlation_delay(x, y, fs, *, return_correlation=False)
 ```
 
-Estimate the **loopback-to-microphone delay** using time-domain cross-correlation. In a loudspeaker measurement, this delay includes sound propagation through air and can reflect delays introduced by the loudspeaker, the microphone, and the relative timing of the acquisition channels.
+Estimate the **loopback-to-microphone delay** using time-domain cross-correlation. In a loudspeaker measurement, this delay includes sound propagation through air and can reflect delays introduced by the loudspeaker and the microphone.
 
 - Smaart’s Delay Finder “calculates the difference in time between your measurement signal and your reference signal” and lists “Propagation time from speaker to microphone” as a contributor. [1]
 - Room EQ Wizard states that “measurements will be relative to the loopback timing” and identifies “the time it takes sound to travel from the speaker being measured to the microphone” as part of the measured delay. [2]
