@@ -3,7 +3,7 @@ import path from 'node:path';
 import { marked } from 'marked';
 import katex from 'katex';
 
-const version = '0.1.1';
+const version = '0.1.2';
 
 const pages = [
   {
@@ -112,4 +112,5 @@ fs.mkdirSync('docs/assets/katex', { recursive: true });
 fs.copyFileSync('node_modules/katex/dist/katex.min.css', 'docs/assets/katex/katex.min.css');
 fs.cpSync('node_modules/katex/dist/fonts', 'docs/assets/katex/fonts', { recursive: true });
 fs.copyFileSync('python/pyacdete/pyacdete/loudspeaker.py', 'docs/downloads/loudspeaker.py');
+fs.copyFileSync('python/pyacdete/examples/smard_delay_example.py', 'docs/downloads/smard_delay_example.py');
 for (const page of pages) buildPage(page);

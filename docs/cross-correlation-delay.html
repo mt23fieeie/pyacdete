@@ -10,7 +10,7 @@
 <a class="skip-link" href="#main">Skip to content</a>
 <header class="topbar"><div class="topbar-inner">
 <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">☰</button>
-<a class="brand" href="./">pyacdete<span class="version">0.1.1</span></a>
+<a class="brand" href="./">pyacdete<span class="version">0.1.2</span></a>
 <span class="library-name">Python Acoustic Device Testing</span>
 <div class="search-wrap"><label class="sr-only" for="doc-search">Find in this reference</label><input id="doc-search" type="search" placeholder="Find in this reference…" autocomplete="off"><kbd>/</kbd><div id="search-results" role="list" hidden></div></div>
 <span class="language" aria-label="Documentation language">EN</span>
@@ -20,12 +20,12 @@
 <a class="side-home" href="./">API reference</a><p class="sidebar-caption">Python Acoustic Device Testing</p>
 <nav><p class="nav-group">Loudspeaker</p><a class="function-link" href="index.html">h1_response</a>
 <a class="function-link" href="single-tone-thd.html">single_tone_thd</a>
-<a class="function-link selected" href="#main" aria-current="page">cross_correlation_delay</a><div class="side-sections"><a href="#parameters">Parameters</a><a href="#returns">Returns</a><a href="#notes">Notes</a><a href="#references">References</a></div></nav>
-<div class="sidebar-footer"><span>pyacdete 0.1.1</span><span>English documentation</span></div>
+<a class="function-link selected" href="#main" aria-current="page">cross_correlation_delay</a><div class="side-sections"><a href="#parameters">Parameters</a><a href="#returns">Returns</a><a href="#notes">Notes</a><a href="#references">References</a><a href="#examples">Examples</a></div></nav>
+<div class="sidebar-footer"><span>pyacdete 0.1.2</span><span>English documentation</span></div>
 </aside>
 <main id="main" class="document"><div class="breadcrumbs"><a href="./">API reference</a><span>›</span><span>loudspeaker</span></div><div class="page-actions"><a href="downloads/loudspeaker.py" download>View source</a></div>
 <h1 id="pyacdete-loudspeaker-cross-correlation-delay">pyacdete.loudspeaker.cross_correlation_delay<a class="anchor" href="#pyacdete-loudspeaker-cross-correlation-delay" aria-label="Link to pyacdete.loudspeaker.cross_correlation_delay">#</a></h1>
-<div class="code-block"><button class="copy-code" type="button" aria-label="Copy code">Copy</button><pre><code class="language-python">cross_correlation_delay(x, y, fs)
+<div class="code-block"><button class="copy-code" type="button" aria-label="Copy code">Copy</button><pre><code class="language-python">cross_correlation_delay(x, y, fs, *, return_correlation=False)
 </code></pre></div>
 <p>Estimate the <strong>loopback-to-microphone delay</strong> using time-domain cross-correlation. In a loudspeaker measurement, this delay includes sound propagation through air and can reflect delays introduced by the loudspeaker, the microphone, and the relative timing of the acquisition channels.</p>
 <ul>
@@ -40,6 +40,8 @@
 <dd><p>Real, one-dimensional samples of the corresponding microphone recording. Use the same length, sampling rate, and recording window as <code>x</code>. Sample zero represents the same acquisition instant in both arrays, preserving the delay between the recorded waveforms.</p></dd>
 <dt id="param-fs"><code>fs</code><span class="type">float</span></dt>
 <dd><p>Positive finite sampling frequency shared by both recordings, in Hz.</p></dd>
+<dt id="param-return-correlation"><code>return_correlation</code><span class="type">bool, optional</span></dt>
+<dd><p>Set to <code>True</code> to include the lag axis and full cross-correlation in the result. The default is <code>False</code>.</p></dd>
 </dl>
 
 <p>Both arrays must be nonempty, contain only finite samples, and have a varying signal.</p>
@@ -62,6 +64,16 @@
 <td><code>delay_seconds</code></td>
 <td>float</td>
 <td><code>delay_samples / fs</code>, in seconds.</td>
+</tr>
+<tr>
+<td><code>lags_samples</code></td>
+<td>ndarray of int, shape (2N − 1,)</td>
+<td>Signed lag axis in samples. Returned when <code>return_correlation=True</code>.</td>
+</tr>
+<tr>
+<td><code>correlation</code></td>
+<td>ndarray of float, shape (2N − 1,)</td>
+<td>Unnormalized full cross-correlation at each lag. Returned when <code>return_correlation=True</code>.</td>
 </tr>
 </tbody></table></div>
 <h2 id="notes">Notes<a class="anchor" href="#notes" aria-label="Link to Notes">#</a></h2>
@@ -99,12 +111,57 @@ c-1 5-5 9-11 9h-2L532 67 19 159h-2c-5 0-9-4-11-9l-5-22c-1-6 2-12 8-13z"/></svg><
 <li>C. H. Knapp and G. C. Carter. <a href="https://doi.org/10.1109/TASSP.1976.1162830">The generalized correlation method for estimation of time delay</a>. <em>IEEE Transactions on Acoustics, Speech, and Signal Processing</em>, 24(4), 320–327, 1976.</li>
 <li>SciPy. <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.correlate.html"><code>scipy.signal.correlate</code></a>.</li>
 <li>SciPy. <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.correlation_lags.html"><code>scipy.signal.correlation_lags</code></a>.</li>
+<li>J. K. Nielsen, J. R. Jensen, S. H. Jensen and M. G. Christensen. <a href="https://www.aaudxp-cms.aau.dk/media/3yhdemt5/smardpaperiwaenc2014.pdf">The Single- and Multichannel Audio Recordings Database (SMARD)</a>. <em>IWAENC</em>, 2014.</li>
 </ol>
+<h2 id="examples">Examples<a class="anchor" href="#examples" aria-label="Link to Examples">#</a></h2>
+<h3 id="measure-delay-in-smard-configuration-2000">Measure delay in SMARD configuration 2000<a class="anchor" href="#measure-delay-in-smard-configuration-2000" aria-label="Link to Measure delay in SMARD configuration 2000">#</a></h3>
+<p>Use the electrical loopback and the single-microphone recording from the same white Gaussian noise playback. Both files are mono, sampled at 48 kHz, and contain 576,000 samples. [6]</p>
+<h4>Step 1. Download the files</h4>
+<p>On Windows, install <a href="https://www.python.org/downloads/windows/">Python 3.14</a>. Save the wheel and the runner in <code>Downloads\Delay-demo</code>. Extract the <a href="https://shares01.portal.aau.dk/smard/data/2000.zip">SMARD configuration 2000 raw archive</a> into <code>Downloads\2000</code>. The two FLAC files are inside <code>2000_20140121-1125</code>. [6]</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="downloads/pyacdete-0.1.2-py3-none-any.whl" download><code>pyacdete-0.1.2-py3-none-any.whl</code></a></td>
+<td>Installs the library containing <code>cross_correlation_delay</code>.</td>
+</tr>
+<tr>
+<td><a href="downloads/smard_delay_example.py" download><code>smard_delay_example.py</code></a></td>
+<td>Reads the FLACs, calls the installed function, and saves the curve.</td>
+</tr>
+<tr>
+<td><code>wgn_48kHz_ch8_DirLS.flac</code></td>
+<td>Electrical loopback reference, <code>x</code>.</td>
+</tr>
+<tr>
+<td><code>wgn_48kHz_ch24_single_mic.flac</code></td>
+<td>Microphone recording, <code>y</code>.</td>
+</tr>
+</tbody></table></div>
+<h4>Step 2. Install and run in PowerShell</h4>
+<div class="code-block"><button class="copy-code" type="button" aria-label="Copy code">Copy</button><pre><code class="language-powershell">Set-Location -LiteralPath &quot;$env:USERPROFILE\Downloads\Delay-demo&quot;
+py -3.14 -m venv .venv
+&amp; &quot;.\.venv\Scripts\python.exe&quot; -m pip install --index-url https://pypi.org/simple --timeout 60 &quot;.\pyacdete-0.1.2-py3-none-any.whl[smard]&quot;
+&amp; &quot;.\.venv\Scripts\python.exe&quot; &quot;.\smard_delay_example.py&quot; &quot;$env:USERPROFILE\Downloads\2000\2000_20140121-1125&quot;
+</code></pre></div>
+<p>The runner calls the API with <code>return_correlation=True</code>, converts the lag axis to milliseconds, and saves <code>smard_delay_correlation.png</code> next to the script.</p>
+<h4>Recorded result</h4>
+<div class="code-block"><button class="copy-code" type="button" aria-label="Copy code">Copy</button><pre><code class="language-text">Sample rate: 48000 Hz
+Samples per channel: 576000
+Delay: +432 samples
+Delay: +0.009000000 s (+9.000000 ms)
+Plot saved: smard_delay_correlation.png
+</code></pre></div>
+<figure class="result-figure"><a href="assets/smard_delay_correlation.png"><img src="assets/smard_delay_correlation.png" alt="SMARD 2000 cross-correlation versus lag in milliseconds. The highest peak is marked at positive 9 milliseconds." width="1620" height="810"></a><figcaption>Cross-correlation from the Windows run. The curve is shown from −5 to +14 ms, and the dashed line marks the maximum at +432 samples. The microphone recording lags the electrical loopback by 9 ms in this setup.</figcaption></figure>
 
-<footer class="page-footer"><p>Python Acoustic Device Testing · pyacdete 0.1.1</p><p>Time-domain cross-correlation delay API reference.</p><p>This website was built with assistance from ChatGPT. Please send feedback to <a href="mailto:1220010941@student.must.edu.mo">1220010941@student.must.edu.mo</a>.</p></footer>
+<footer class="page-footer"><p>Python Acoustic Device Testing · pyacdete 0.1.2</p><p>Time-domain cross-correlation delay API reference.</p><p>This website was built with assistance from ChatGPT. Please send feedback to <a href="mailto:1220010941@student.must.edu.mo">1220010941@student.must.edu.mo</a>.</p></footer>
 </main>
-<aside class="on-this-page" aria-label="On this page"><p>On this page</p><nav><ul><li><a href="#parameters">Parameters</a></li><li><a href="#returns">Returns</a></li><li><a href="#notes">Notes</a></li><li><a href="#references">References</a></li></ul></nav><a class="back-top" href="#main">Back to top ↑</a></aside>
+<aside class="on-this-page" aria-label="On this page"><p>On this page</p><nav><ul><li><a href="#parameters">Parameters</a></li><li><a href="#returns">Returns</a></li><li><a href="#notes">Notes</a></li><li><a href="#references">References</a></li><li><a href="#examples">Examples</a></li></ul></nav><a class="back-top" href="#main">Back to top ↑</a></aside>
 </div>
 <div class="menu-scrim" hidden></div>
-<script type="application/json" id="search-index">[{"level":1,"text":"pyacdete.loudspeaker.cross_correlation_delay","id":"pyacdete-loudspeaker-cross-correlation-delay"},{"level":2,"text":"Parameters","id":"parameters"},{"level":2,"text":"Returns","id":"returns"},{"level":2,"text":"Notes","id":"notes"},{"level":3,"text":"1. General idea","id":"1-general-idea"},{"level":3,"text":"2. Cross-correlation and delay","id":"2-cross-correlation-and-delay"},{"level":3,"text":"3. Limitations","id":"3-limitations"},{"level":2,"text":"References","id":"references"},{"level":3,"text":"x","id":"param-x"},{"level":3,"text":"y","id":"param-y"},{"level":3,"text":"fs","id":"param-fs"}]</script>
+<script type="application/json" id="search-index">[{"level":1,"text":"pyacdete.loudspeaker.cross_correlation_delay","id":"pyacdete-loudspeaker-cross-correlation-delay"},{"level":2,"text":"Parameters","id":"parameters"},{"level":2,"text":"Returns","id":"returns"},{"level":2,"text":"Notes","id":"notes"},{"level":3,"text":"1. General idea","id":"1-general-idea"},{"level":3,"text":"2. Cross-correlation and delay","id":"2-cross-correlation-and-delay"},{"level":3,"text":"3. Limitations","id":"3-limitations"},{"level":2,"text":"References","id":"references"},{"level":2,"text":"Examples","id":"examples"},{"level":3,"text":"Measure delay in SMARD configuration 2000","id":"measure-delay-in-smard-configuration-2000"},{"level":3,"text":"x","id":"param-x"},{"level":3,"text":"y","id":"param-y"},{"level":3,"text":"fs","id":"param-fs"},{"level":3,"text":"return_correlation","id":"param-return-correlation"}]</script>
 </body></html>

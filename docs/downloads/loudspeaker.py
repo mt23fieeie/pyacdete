@@ -156,35 +156,23 @@ def single_tone_thd(mic_samples, fs, f0, max_order=3):
     return dict(thd_percent=thd_base, amplitude_peak=peak_amplitudes[:max_order])
 
 
-def cross_correlation_delay(x, y, fs):
+def cross_correlation_delay(x, y, fs, *, return_correlation=False):
     """Estimate the delay of a microphone recording relative to a loopback.
 
-    Supply synchronized, equal-length 1D signals and their common sample
-    rate fs in Hz. A positive delay means y arrives after x.
-    Return delay_samples and delay_seconds in a dictionary.
+    Supply synchronized, equal-length mono signals and a common positive fs
+    in Hz. A positive delay means y arrives after x. With return_correlation,
+    also return the full lag axis in samples and the cross-correlation.
     """
-    if isinstance(fs, (bool, np.bool_)) or not isinstance(
-        fs, (int, float, np.integer, np.floating)
-    ):
-        raise ValueError("fs must be a positive finite sampling frequency")
-    fs = float(fs)
-    if not np.isfinite(fs) or fs <= 0:
-        raise ValueError("fs must be a positive finite sampling frequency")
-
-    x, y = np.asarray(x), np.asarray(y)
-    if x.ndim != 1 or y.ndim != 1 or x.size != y.size or x.size == 0:
-        raise ValueError("x and y must be nonempty, equal-length 1D signals")
-    if x.dtype.kind not in "iuf" or y.dtype.kind not in "iuf":
-        raise ValueError("x and y must contain real numeric samples")
-    x, y = x.astype(float), y.astype(float)
-    if not np.all(np.isfinite(x)) or not np.all(np.isfinite(y)):
-        raise ValueError("x and y must contain only finite samples")
-    if np.all(x == x[0]) or np.all(y == y[0]):
-        raise ValueError("x and y must both vary over time")
-
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
     x = x - x.mean()
     y = y - y.mean()
+
     correlation = signal.correlate(y, x, mode="full", method="auto")
-    lags = signal.correlation_lags(len(y), len(x), mode="full")
-    delay_samples = int(lags[np.argmax(correlation)])
-    return dict(delay_samples=delay_samples, delay_seconds=delay_samples / fs)
+    lags_samples = signal.correlation_lags(len(y), len(x), mode="full")
+    delay_samples = int(lags_samples[np.argmax(correlation)])
+
+    result = dict(delay_samples=delay_samples, delay_seconds=delay_samples / float(fs))
+    if return_correlation:
+        result.update(lags_samples=lags_samples, correlation=correlation)
+    return result
