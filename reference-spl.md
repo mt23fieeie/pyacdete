@@ -2,7 +2,7 @@
 
 ## Basic Concepts and Theoretical Derivation of SPL Formula
 
-Sound produces pressure fluctuations around the ambient air pressure at the microphone. Sound pressure level (SPL) compares the root-mean-square (RMS) size of those fluctuations with a reference pressure on a decibel scale. The function `spl_leq` estimates the unweighted level over a selected recording interval.
+Sound produces pressure fluctuations around the ambient air pressure at the microphone. Sound pressure level (SPL) compares the root-mean-square (RMS) size of those fluctuations with a reference pressure on a decibel scale.
 
 **Notation**
 
@@ -21,7 +21,28 @@ The subscript $\mathrm{cal}$ denotes the calibration segment or a quantity assoc
 
 **Derivation**
 
-Assume both recordings use the same linear acquisition chain, gain, and digital scaling, with negligible DC offset and positive RMS values.
+Assume both recordings use the same acquisition chain.
+
+We will employ these equalities from two references.
+
+**Pierce (2019)**
+
+$$
+L_p = 10\log_{10}\!\left(\frac{(p_s^2)_{\mathrm{av}}}{P_{\mathrm{REF}}^2}\right).
+\tag{2.3.1}
+$$
+
+**Miyara (2017)**
+
+$$
+\begin{aligned}
+X_{\mathrm{ef}} &= \sqrt{\frac{1}{N}\sum_{n=1}^{N}x^2(n)} && (7.2)\\
+x(n) &= Kp(t_n) && (7.3)\\
+X_{\mathrm{cal}} &= \sqrt{\frac{1}{N_{\mathrm{cal}}}\sum_{n=1}^{N_{\mathrm{cal}}}x_{\mathrm{cal}}^2(n)} && (7.4)\\
+P_{\mathrm{cal}} &= P_{\mathrm{REF}}10^{L_{\mathrm{cal}}/20} && (7.5)\\
+K &= \frac{X_{\mathrm{cal}}}{P_{\mathrm{REF}}10^{L_{\mathrm{cal}}/20}} && (7.6)
+\end{aligned}
+$$
 
 From Pierce's SPL definition,
 
@@ -47,7 +68,7 @@ X_{\mathrm{cal}}^2
 \end{aligned}
 $$
 
-For the remaining steps, use sampled RMS values. The shared acquisition model gives
+For the remaining steps, use sampled RMS values. In our measurements, sound pressure is the input to the microphone transducer, and the acquisition chain records its output as dimensionless digital samples. We assume the following relation between the input pressure and the recorded samples, with conversion factor $K$.
 
 $$
 \begin{aligned}
