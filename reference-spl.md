@@ -1,6 +1,35 @@
 # pyacdete.loudspeaker.spl_leq
 
-## Basic Concepts and Theoretical Derivation of SPL Formula
+```python
+spl_leq(mic_samples, fs, *, calibration=None)
+```
+
+Compute the RMS level of a selected mono microphone recording. When calibration is supplied, estimate the unweighted equivalent continuous sound pressure level $L_{\mathrm{eq}}$ from the ratio of the test and calibration RMS amplitudes.
+
+## Parameters
+
+<dl class="api-fields">
+<dt id="param-mic-samples"><code>mic_samples</code><span class="type">array_like, shape (N,)</span></dt>
+<dd><p>Nonempty, finite real samples from one microphone channel over the interval to analyze.</p></dd>
+<dt id="param-fs"><code>fs</code><span class="type">float</span></dt>
+<dd><p>Positive, finite sampling frequency of <code>mic_samples</code>, in Hz.</p></dd>
+<dt id="param-calibration"><code>calibration</code><span class="type">tuple (array_like, float) or None, optional</span></dt>
+<dd><p>Pair <code>(cal_samples, level_db_spl)</code>. <code>cal_samples</code> contains mono calibration samples recorded through the same microphone chain. <code>level_db_spl</code> is the known calibration level in dB SPL. The default is <code>None</code>.</p></dd>
+</dl>
+
+## Returns
+
+**result : dict**
+
+| Key | Type | Description |
+|---|---|---|
+| `duration_s` | float | Duration of the selected interval in seconds, calculated as `len(mic_samples) / fs`. |
+| `rms` | float | Root-mean-square amplitude of `mic_samples`, in the same units as the input samples. |
+| `leq_db_spl` | float or `None` | Unweighted equivalent continuous sound pressure level in dB SPL. Returns `None` when calibration is omitted and `-inf` when valid calibration is supplied and the test RMS is zero. |
+
+## Notes
+
+### Basic Concepts and Theoretical Derivation of SPL Formula
 
 Sound produces pressure fluctuations around the ambient air pressure at the microphone. Sound pressure level (SPL) compares the root-mean-square (RMS) size of those fluctuations with a reference pressure on a decibel scale.
 
@@ -106,3 +135,45 @@ L_p
 $$
 
 [Pierce (2019), §2.3.1](https://link.springer.com/chapter/10.1007/978-3-030-11214-1_2) · [Miyara (2017), §§7.3–7.4](https://link.springer.com/chapter/10.1007/978-3-319-55871-4_7)
+
+## Examples
+
+### Measure the SPL of a Yamaha MSR400 loudspeaker
+
+Use the full 25 s microphone recording of a Yamaha MSR400 playing a STIPA test signal at position 2, measurement 1. The accompanying recording supplies the 1 kHz calibration tone at 94 dB SPL. Both WAV files are mono and sampled at 48 kHz. [Šimon Cieslar (2025), §9.2](https://www.vut.cz/en/students/final-thesis/detail/167229).
+
+| File | Purpose |
+|---|---|
+| <a href="downloads/spl_leq_example.zip" download><code>spl_leq_example.zip</code></a> | Standalone function, example script, and installation requirements. |
+| <a href="downloads/pyacdete-0.1.3-py3-none-any.whl" download><code>pyacdete-0.1.3-py3-none-any.whl</code></a> | Optional library package for importing the function in your own project. |
+| [STIPA_MES1_P2.wav](https://raw.githubusercontent.com/Cieslar-Simon/STI/1b4a0c33740c52d62b81aad7b667b1f85c522fec/control_measurements/Position%202/STIPA_MES1_P2.wav) | Test recording (`mic_samples`). |
+| [Reference_calibration_94_dB_SPL.wav](https://raw.githubusercontent.com/Cieslar-Simon/STI/1b4a0c33740c52d62b81aad7b667b1f85c522fec/control_measurements/Reference_calibration_94_dB_SPL.wav) | Calibration recording (`cal_samples`). |
+
+#### Run the example in PowerShell
+
+Extract the ZIP and open PowerShell in the folder containing `requirements.txt`. The script reads the WAV files from that folder if present, or downloads them automatically.
+
+```powershell
+py -m venv .venv
+& ".\.venv\Scripts\python.exe" -m pip install --index-url https://pypi.org/simple --timeout 60 -r .\requirements.txt
+& ".\.venv\Scripts\python.exe" .\sti_spl_example.py
+```
+
+To make the same measurement with the installed library, pass both recordings and the known calibration level.
+
+```python
+from pyacdete.loudspeaker import spl_leq
+
+result = spl_leq(mic_samples, fs, calibration=(cal_samples, 94.0))
+```
+
+#### Recorded result
+
+```text
+Yamaha MSR400 | STIPA, Position 2, Measurement 1
+Test segment: 25.000 s at 48000 Hz
+Calibration: 1 kHz, 94.0 dB SPL
+Test RMS: 0.0254437465
+Calibration RMS: 0.3368177544
+Unweighted Leq: 71.5637 dB SPL
+```

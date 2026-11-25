@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyacdete"
-version = "0.1.2"
-description = "Python Acoustic Device Testing: loudspeaker H1 response, single-tone THD, and delay"
+version = "0.1.3"
+description = "Python Acoustic Device Testing: loudspeaker H1 response, single-tone THD, delay, and sound pressure level"
 requires-python = ">=3.8"
 dependencies = ["numpy>=1.24,<3", "scipy>=1.10,<2", "matplotlib>=3.7,<4"]
 

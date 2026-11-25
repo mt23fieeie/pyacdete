@@ -1,4 +1,4 @@
-"""Loudspeaker frequency response, harmonic distortion and delay measurements."""
+"""Loudspeaker frequency response, harmonic distortion, delay, and SPL measurements."""
 import csv
 from pathlib import Path
 import warnings
@@ -7,7 +7,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import signal
 
-__all__ = ["h1_response", "single_tone_thd", "cross_correlation_delay"]
+from .spl_leq import spl_leq
+
+__all__ = ["h1_response", "single_tone_thd", "cross_correlation_delay", "spl_leq"]
 
 
 def h1_response(x, y, fs, *, mode="both", threshold=0.9,

@@ -1,9 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { marked } from 'marked';
 import katex from 'katex';
 
-const version = '0.1.2';
+const version = '0.1.3';
 
 const pages = [
   {
@@ -26,10 +27,10 @@ const pages = [
   },
   {
     name: 'spl_leq', source: 'reference-spl.md', file: 'spl-leq.html',
-    description: 'Python Acoustic Device Testing — theoretical derivation of unweighted equivalent continuous sound pressure level.',
-    summary: 'Sound pressure level theory for spl_leq.',
+    description: 'Python Acoustic Device Testing — unweighted equivalent continuous sound pressure level from mono microphone recordings, with a calibrated Yamaha MSR400 example.',
+    summary: 'Unweighted equivalent continuous sound pressure level API reference.',
     reviewNotice: '',
-    showSource: false
+    sourceDownload: 'spl_leq.py'
   }
 ];
 
@@ -79,7 +80,7 @@ function buildPage(page) {
   const navigation = pages.map(p => p === page
     ? `<a class="function-link selected" href="#main" aria-current="page">${p.name}</a><div class="side-sections">${sectionLinks}</div>`
     : `<a class="function-link" href="${p.file}">${p.name}</a>`).join('\n');
-  const sourceAction = page.showSource === false ? '' : '<div class="page-actions"><a href="downloads/loudspeaker.py" download>View source</a></div>';
+  const sourceAction = `<div class="page-actions"><a href="downloads/${page.sourceDownload ?? 'loudspeaker.py'}" download>View source</a></div>`;
   const html = `<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -119,6 +120,12 @@ ${body}
 fs.mkdirSync('docs/assets/katex', { recursive: true });
 fs.copyFileSync('node_modules/katex/dist/katex.min.css', 'docs/assets/katex/katex.min.css');
 fs.cpSync('node_modules/katex/dist/fonts', 'docs/assets/katex/fonts', { recursive: true });
-fs.copyFileSync('python/pyacdete/pyacdete/loudspeaker.py', 'docs/downloads/loudspeaker.py');
+const sourceDir = 'python/pyacdete/pyacdete';
+const splSource = fs.readFileSync(path.join(sourceDir, 'spl_leq.py'), 'utf8');
+const loudspeakerSource = fs.readFileSync(path.join(sourceDir, 'loudspeaker.py'), 'utf8');
+// Include the SPL implementation so the single-file download also works outside the package.
+fs.writeFileSync('docs/downloads/loudspeaker.py', loudspeakerSource.replace('from .spl_leq import spl_leq', () => splSource.trimEnd()));
+fs.writeFileSync('docs/downloads/spl_leq.py', splSource);
+execFileSync(process.platform === 'win32' ? 'python' : 'python3', ['scripts/build_spl_example.py'], { stdio: 'inherit' });
 fs.copyFileSync('python/pyacdete/examples/smard_delay_example.py', 'docs/downloads/smard_delay_example.py');
 for (const page of pages) buildPage(page);
