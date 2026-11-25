@@ -23,6 +23,13 @@ const pages = [
     description: 'Python Acoustic Device Testing — loopback-to-microphone delay estimation with time-domain cross-correlation.',
     summary: 'Time-domain cross-correlation delay API reference.',
     reviewNotice: ''
+  },
+  {
+    name: 'spl_leq', source: 'reference-spl.md', file: 'spl-leq.html',
+    description: 'Python Acoustic Device Testing — theoretical derivation of unweighted equivalent continuous sound pressure level.',
+    summary: 'Sound pressure level theory for spl_leq.',
+    reviewNotice: '',
+    showSource: false
   }
 ];
 
@@ -72,6 +79,7 @@ function buildPage(page) {
   const navigation = pages.map(p => p === page
     ? `<a class="function-link selected" href="#main" aria-current="page">${p.name}</a><div class="side-sections">${sectionLinks}</div>`
     : `<a class="function-link" href="${p.file}">${p.name}</a>`).join('\n');
+  const sourceAction = page.showSource === false ? '' : '<div class="page-actions"><a href="downloads/loudspeaker.py" download>View source</a></div>';
   const html = `<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -95,7 +103,7 @@ function buildPage(page) {
 <nav><p class="nav-group">Loudspeaker</p>${navigation}</nav>
 <div class="sidebar-footer"><span>pyacdete ${version}</span><span>English documentation</span></div>
 </aside>
-<main id="main" class="document"><div class="breadcrumbs"><a href="${home}">API reference</a><span>›</span><span>loudspeaker</span></div><div class="page-actions"><a href="downloads/loudspeaker.py" download>View source</a></div>
+<main id="main" class="document"><div class="breadcrumbs"><a href="${home}">API reference</a><span>›</span><span>loudspeaker</span></div>${sourceAction}
 ${body}
 <footer class="page-footer"><p>Python Acoustic Device Testing · pyacdete ${version}</p><p>${page.summary}</p><p>This website was built with assistance from ChatGPT.${page.reviewNotice} Please send feedback to <a href="mailto:1220010941@student.must.edu.mo">1220010941@student.must.edu.mo</a>.</p></footer>
 </main>
